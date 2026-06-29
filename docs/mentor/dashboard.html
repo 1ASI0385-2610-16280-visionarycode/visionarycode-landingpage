@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel del Mentor — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, #065f46, #10b981);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .availability-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .notification-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      margin-bottom: .75rem;
+      border-left: 4px solid var(--primary);
+    }
+
+    .notification-item.new {
+      background: var(--primary-light);
+      animation: blink.8s ease 3;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .6
+      }
+    }
+
+    .request-lang {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      margin-top: .3rem;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar al panel del mentor</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html" class="active">Panel</a></li>
+          <li><a href="requests.html">Solicitudes</a></li>
+          <li><a href="volunteer.html">Horas</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+
+    <!-- Welcome -->
+    <div class="welcome-banner" role="region" aria-label="Bienvenida del mentor">
+      <div>
+        <h2>¡Hola, <span id="mentor-name">mentor</span>!</h2>
+        <p style="opacity:.85;margin-top:.25rem">Gracias por contribuir a la educación inclusiva.</p>
+        <p style="opacity:.7;font-size:.9rem;margin-top:.5rem">
+          <i class="fa-solid fa-clock" aria-hidden="true"></i>
+          <span id="total-hours">0</span> horas de voluntariado registradas
+        </p>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <a href="requests.html" class="btn" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)">
+          <i class="fa-solid fa-bell"></i> Ver solicitudes
+        </a>
+        <a href="volunteer.html" class="btn" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)">
+          <i class="fa-solid fa-certificate"></i> Constancia
+        </a>
+      </div>
+    </div>
+
+    <!-- Disponibilidad -->
+    <div class="availability-card" role="region" aria-label="Estado de disponibilidad">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+        <div>
+          <h2 style="font-size:1rem;font-weight:700;margin-bottom:.25rem">
+            Mi disponibilidad
+          </h2>
+          <p style="font-size:.85rem;color:var(--text-muted)">
+            Activa tu disponibilidad para recibir solicitudes de estudiantes.
+          </p>
+        </div>
+        <div class="toggle-wrap">
+          <button class="toggle" id="avail-toggle" role="switch" aria-checked="false" aria-label="Cambiar disponibilidad para recibir solicitudes" onclick="toggleAvailability()">
+          </button>
+          <span id="avail-label" style="font-weight:700;font-size:.9rem">Ocupado</span>
+        </div>
+      </div>
+      <div id="avail-status" class="alert" style="margin-top:1rem" aria-live="polite"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-grid" style="margin-bottom:1.5rem" role="region" aria-label="Estadísticas del mentor">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-users"></i></div>
+        <div>
+          <div class="stat-value" id="stat-sessions" style="color:#065f46">0</div>
+          <div class="stat-label">Sesiones completadas</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-clock"></i></div>
+        <div>
+          <div class="stat-value" id="stat-hours" style="color:#065f46">0h</div>
+          <div class="stat-label">Horas voluntariado</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-star"></i></div>
+        <div>
+          <div class="stat-value" id="stat-rating" style="color:#065f46">—</div>
+          <div class="stat-label">Calificación promedio</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-bell"></i></div>
+        <div>
+          <div class="stat-value" id="stat-pending" style="color:#065f46">0</div>
+          <div class="stat-label">Solicitudes pendientes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solicitudes recientes -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Solicitudes recientes</h2>
+        <a href="requests.html" class="btn btn-outline btn-sm">Ver todas</a>
+      </div>
+      <div id="requests-preview" aria-live="polite" role="region" aria-label="Solicitudes de mentoría recientes"></div>
+    </div>
+
+    <!-- Mis lenguajes -->
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-header">
+        <h2 class="card-title">Mis especialidades</h2>
+      </div>
+      <div class="lang-tags" id="mentor-langs" aria-label="Lenguajes de especialidad"></div>
+    </div>
+
+  </main>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireMentor();
+
+    if (user) {
+      document.getElementById('mentor-name').textContent = user.name.split(' ')[0];
+      document.getElementById('total-hours').textContent = user.hours || 0;
+      document.getElementById('stat-sessions').textContent = user.sessions || 0;
+      document.getElementById('stat-hours').textContent = (user.hours || 0) + 'h';
+      document.getElementById('stat-rating').textContent = user.rating ? user.rating.toFixed(1) + '★' : '—';
+
+      // Availability
+      const isAvail = user.available || false;
+      setAvailability(isAvail);
+
+      // Langs
+      const langsEl = document.getElementById('mentor-langs');
+      langsEl.innerHTML = (user.langs || []).map(l => `<span class="badge badge-primary">${l}</span>`).join('');
+
+      // Pending requests
+      const pending = Mentoring.getPendingRequests().filter(r => {
+        const myLangs = user.langs || [];
+        return !r.lang || myLangs.includes(r.lang);
+      });
+      document.getElementById('stat-pending').textContent = pending.length;
+
+      // Preview requests
+      const previewEl = document.getElementById('requests-preview');
+      if (pending.length === 0) {
+        previewEl.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem;padding:.5rem 0">No hay solicitudes pendientes en este momento.</p>';
+      } else {
+        previewEl.innerHTML = pending.slice(0, 3).map(r => `
+ <div class="notification-item new" role="article" aria-label="Solicitud de mentoría en ${r.lang||'general'}">
+ <div>
+ <strong><i class="fa-solid fa-circle" style="color:var(--primary);font-size:.6rem" aria-hidden="true"></i> Nueva solicitud</strong>
+ <div class="request-lang">
+ ${r.lang ? `<span class="badge badge-primary">${r.lang}</span>` : '<span class="badge badge-warning">General</span>'}
+ </div>
+ <div style="font-size:.82rem;color:var(--text-muted);margin-top:.3rem">${r.problem}</div>
+ </div>
+ <button class="btn btn-success btn-sm" onclick="acceptRequest('${r.id}')" aria-label="Aceptar solicitud de mentoría en ${r.lang||'general'}">
+ <i class="fa-solid fa-check"></i> Aceptar
+ </button>
+ </div>`).join('');
+        // Audio notification
+        TTS.playEarcon('notify');
+        TTS.speak(`Tienes ${pending.length} solicitud${pending.length>1?'es':''} pendiente${pending.length>1?'s':''} de estudiantes.`);
+      }
+
+      setTimeout(() => TTS.speak('Panel del mentor. Hola ' + user.name.split(' ')[0] + '. Tienes ' + pending.length + ' solicitudes pendientes. Activa tu disponibilidad para recibir más solicitudes.'), 500);
+    }
+
+    function setAvailability(on) {
+      const toggle = document.getElementById('avail-toggle');
+      const label = document.getElementById('avail-label');
+      const status = document.getElementById('avail-status');
+      toggle.classList.toggle('on', on);
+      toggle.setAttribute('aria-checked', on);
+      label.textContent = on ? 'En línea' : 'Ocupado';
+      if (on) {
+        status.className = 'alert alert-success';
+        status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Estás disponible. Los estudiantes pueden solicitar tu ayuda.';
+      } else {
+        status.className = 'alert alert-warning';
+        status.innerHTML = '<i class="fa-solid fa-pause-circle"></i> Estás marcado como ocupado. No recibirás nuevas solicitudes.';
+      }
+    }
+
+    function toggleAvailability() {
+      if (!user) return;
+      const newState = Mentoring.toggleMentorAvailability(user.id);
+      setAvailability(newState);
+      TTS.speak(newState ? 'Ahora estás en línea. Los estudiantes pueden solicitar tu ayuda.' : 'Ahora estás marcado como ocupado. No recibirás solicitudes.');
+      TTS.playEarcon('notify');
+      toast(newState ? 'Estás en línea ✓' : 'Marcado como ocupado', newState ? 'success' : 'info');
+    }
+
+    function acceptRequest(reqId) {
+      if (!user) return;
+      Mentoring.acceptRequest(reqId, user.id);
+      TTS.speak('Solicitud aceptada. Entrando al entorno colaborativo.', true);
+      TTS.playEarcon('success');
+      toast('Conectando con el estudiante…', 'success');
+      setTimeout(() => {
+        window.location.href = '../session/index.html';
+      }, 1200);
+    }
+  </script>
+</body>
+
+</html>

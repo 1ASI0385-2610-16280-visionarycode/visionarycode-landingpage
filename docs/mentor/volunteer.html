@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horas de Voluntariado — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .hours-hero {
+      background: linear-gradient(135deg, #065f46, #10b981);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .hours-big {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .hours-label {
+      font-size: 1rem;
+      opacity: .8;
+      margin-top: .4rem;
+    }
+
+    .milestone-list {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .milestone {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .milestone.reached {
+      border-color: var(--success);
+      background: #d1fae5;
+    }
+
+    .milestone.m-left {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .milestone.m-icon {
+      font-size: 1.5rem;
+    }
+
+    .cert-card {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border: 2px solid #6ee7b7;
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .cert-locked {
+      opacity: .55;
+    }
+
+    .history-table th,
+    .history-table td {
+      font-size: .85rem;
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar a mis horas de voluntariado</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="requests.html">Solicitudes</a></li>
+          <li><a href="volunteer.html" class="active">Horas</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+    <div class="page-header">
+      <h1 class="page-title">Horas de voluntariado</h1>
+      <p class="page-subtitle">Registro de tu impacto social y constancias descargables</p>
+    </div>
+
+    <!-- Hours counter -->
+    <div class="hours-hero" role="region" aria-label="Contador de horas de voluntariado">
+      <div class="hours-big" id="hours-big" aria-live="polite">0</div>
+      <div class="hours-label">horas de mentoría inclusiva voluntaria</div>
+      <div style="margin-top:1.25rem;font-size:.9rem;opacity:.8">
+        Cada minuto que dedicas a un estudiante queda registrado aquí.
+      </div>
+      <button class="btn" style="margin-top:1.25rem;background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)" onclick="announceHours()" aria-label="Escuchar resumen de horas">
+        <i class="fa-solid fa-volume-high"></i> Escuchar resumen
+      </button>
+    </div>
+
+    <!-- Impact stats -->
+    <div class="impact-grid" role="region" aria-label="Estadísticas de impacto">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-users"></i></div>
+        <div>
+          <div class="stat-value" id="stat-students" style="color:#065f46">0</div>
+          <div class="stat-label">Estudiantes ayudados</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-star"></i></div>
+        <div>
+          <div class="stat-value" id="stat-rating" style="color:#065f46">—</div>
+          <div class="stat-label">Calificación promedio</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+          <div class="stat-value" id="stat-sessions" style="color:#065f46">0</div>
+          <div class="stat-label">Sesiones totales</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46"><i class="fa-solid fa-certificate"></i></div>
+        <div>
+          <div class="stat-value" id="stat-certs" style="color:#065f46">0</div>
+          <div class="stat-label">Constancias emitidas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Milestones -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h2 class="card-title">Hitos de voluntariado</h2>
+      </div>
+      <div class="milestone-list" id="milestones" role="list" aria-label="Hitos de horas de voluntariado"></div>
+    </div>
+
+    <!-- Certificate download -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h2 class="card-title">Constancia de mentoría</h2>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1.25rem">
+        Documento oficial que acredita tus horas de enseñanza accesible. Válido para LinkedIn y CV.
+      </p>
+      <div id="cert-area"></div>
+    </div>
+
+    <!-- Session history -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Historial de sesiones</h2>
+      </div>
+      <div id="history-area" style="overflow-x:auto"></div>
+    </div>
+
+  </main>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireMentor();
+
+    const MILESTONES = [{
+        hours: 5,
+        icon: '🌱',
+        label: 'Primer impacto',
+        desc: '5 horas de mentoría'
+      },
+      {
+        hours: 10,
+        icon: '⭐',
+        label: 'Mentor activo',
+        desc: '10 horas — constancia disponible'
+      },
+      {
+        hours: 25,
+        icon: '🏆',
+        label: 'Mentor destacado',
+        desc: '25 horas de impacto social'
+      },
+      {
+        hours: 50,
+        icon: '🎖️',
+        label: 'Mentor élite',
+        desc: '50 horas — ¡extraordinario!'
+      },
+      {
+        hours: 100,
+        icon: '👑',
+        label: 'Leyenda inclusiva',
+        desc: '100 horas de educación accesible'
+      },
+    ];
+
+    if (user) {
+      const hours = user.hours || 0;
+      document.getElementById('hours-big').textContent = hours;
+      document.getElementById('stat-sessions').textContent = user.sessions || 0;
+      document.getElementById('stat-rating').textContent = user.rating ? user.rating.toFixed(1) + '★' : '—';
+
+      // Count unique students from history
+      const hist = DB.get('history') || [];
+      const mySessions = hist.filter(h => h.mentorId === user.id);
+      const uniqueStudents = new Set(mySessions.map(h => h.studentId)).size;
+      document.getElementById('stat-students').textContent = uniqueStudents;
+      const certsIssued = Math.floor(hours / 10);
+      document.getElementById('stat-certs').textContent = certsIssued;
+
+      // Milestones
+      const milestonesEl = document.getElementById('milestones');
+      milestonesEl.innerHTML = MILESTONES.map(m => {
+        const reached = hours >= m.hours;
+        const pct = Math.min(100, Math.round((hours / m.hours) * 100));
+        return `<div class="milestone ${reached ? 'reached' : ''}" role="listitem"
+ aria-label="${m.label}: ${m.desc}. ${reached ? 'Alcanzado' : pct + '% completado'}">
+ <div class="m-left">
+ <span class="m-icon" aria-hidden="true">${m.icon}</span>
+ <div>
+ <strong>${m.label}</strong>
+ <div style="font-size:.8rem;color:var(--text-muted)">${m.desc}</div>
+ ${!reached ? `<div style="margin-top:.3rem">
+ <div class="progress-bar-wrap" style="height:6px;width:120px">
+ <div class="progress-bar" style="width:${pct}%"></div>
+ </div>
+ <div style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">${hours}/${m.hours}h</div>
+ </div>` : ''}
+ </div>
+ </div>
+ ${reached
+ ? `<span class="badge badge-success"><i class="fa-solid fa-check" aria-hidden="true"></i> Alcanzado</span>`
+ : `<span style="font-size:.82rem;color:var(--text-muted)">Faltan ${m.hours - hours}h</span>`}
+ </div>`;
+      }).join('');
+
+      // Certificate
+      const certArea = document.getElementById('cert-area');
+      const nextMilestone = MILESTONES.find(m => hours < m.hours);
+      const canDownload = hours >= 10;
+      if (canDownload) {
+        certArea.innerHTML = `<div class="cert-card" role="region" aria-label="Constancia disponible para descarga">
+ <div style="font-size:3rem;margin-bottom:.75rem" aria-hidden="true">📜</div>
+ <h3 style="color:#065f46;margin-bottom:.5rem">¡Constancia disponible!</h3>
+ <p style="color:var(--text-muted);margin-bottom:.75rem">
+ Has acumulado <strong>${hours} horas</strong> de mentoría voluntaria.
+ </p>
+ <button class="btn btn-success btn-lg" onclick="downloadConstancia()" aria-label="Generar y descargar constancia de mentoría">
+ <i class="fa-solid fa-download"></i> Generar Constancia PDF
+ </button>
+ <p style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem">
+ PDF accesible con etiquetas ARIA. Válido para CV y LinkedIn.
+ </p>
+ </div>`;
+      } else {
+        const needed = 10 - hours;
+        certArea.innerHTML = `<div class="cert-card cert-locked" role="region" aria-label="Constancia pendiente, requiere 10 horas">
+ <div style="font-size:3rem;margin-bottom:.75rem" aria-hidden="true">🔒</div>
+ <h3 style="margin-bottom:.5rem">Constancia pendiente</h3>
+ <p style="color:var(--text-muted);margin-bottom:1rem">
+ Necesitas alcanzar <strong>10 horas</strong> de voluntariado para emitir tu primera constancia.
+ </p>
+ <div class="progress-bar-wrap"><div class="progress-bar" style="width:${(hours/10)*100}%"></div></div>
+ <p style="font-size:.85rem;margin-top:.5rem">Progreso: ${hours}/10h — Faltan ${needed}h</p>
+ <button class="btn btn-outline" style="margin-top:1rem" onclick="simulateHours()">
+ Simular 10 horas (demo)
+ </button>
+ </div>`;
+      }
+
+      // History table
+      const histArea = document.getElementById('history-area');
+      if (mySessions.length === 0) {
+        histArea.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem;padding:.5rem 0">Aún no tienes sesiones registradas.</p>';
+      } else {
+        histArea.innerHTML = `<table class="history-table" aria-label="Historial de sesiones de mentoría">
+ <thead><tr><th>Fecha</th><th>Tema / Duda</th><th>Duración</th><th>Calificación</th></tr></thead>
+ <tbody>${[...mySessions].reverse().map(h => `<tr>
+ <td>${h.date}</td>
+ <td>${h.topic || '—'}</td>
+ <td>${h.duration} min</td>
+ <td>${h.rating ? '<span style="color:var(--accent)">' + '★'.repeat(h.rating) + '</span>' : '<span style="color:var(--text-muted)">Sin calificar</span>'}</td>
+ </tr>`).join('')}</tbody>
+ </table>`;
+      }
+
+      setTimeout(() => TTS.speak('Página de horas de voluntariado. Has acumulado ' + hours + ' horas de mentoría inclusiva. ' + (canDownload ? 'Tu constancia está disponible para descarga.' : 'Necesitas ' + (10 - hours) + ' horas más para obtener tu primera constancia.')), 500);
+    }
+
+    function announceHours() {
+      const h = user?.hours || 0;
+      TTS.speak(`Resumen de voluntariado: Has acumulado ${h} horas de mentoría inclusiva. ${h >= 10 ? 'Tu constancia de mentoría está disponible para descarga.' : 'Necesitas ' + (10-h) + ' horas más para tu primera constancia.'}`, true);
+    }
+
+    function downloadConstancia() {
+      generateCertificate('mentor');
+      TTS.speak('Generando constancia de mentoría. El documento se abrirá en una nueva ventana para imprimir o guardar como PDF.');
+      TTS.playEarcon('success');
+      toast('Constancia generada. Usa Imprimir para guardar como PDF.', 'success', 5000);
+    }
+
+    function simulateHours() {
+      const mentors = DB.get('mentors') || [];
+      const m = mentors.find(m => m.id === user.id);
+      if (m) {
+        m.hours = 10;
+        DB.set('mentors', mentors);
+        DB.set('currentUser', m);
+      }
+      TTS.speak('Simulación completada. Ahora tienes 10 horas de voluntariado. Tu constancia está disponible.', true);
+      TTS.playEarcon('badge');
+      setTimeout(() => location.reload(), 1500);
+    }
+  </script>
+</body>
+
+</html>

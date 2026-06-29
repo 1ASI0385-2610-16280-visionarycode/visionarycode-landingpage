@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accesibilidad — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .85rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      font-weight: 600;
+      font-size: .9rem;
+    }
+
+    .setting-desc {
+      font-size: .8rem;
+      color: var(--text-muted);
+      margin-top: .2rem;
+    }
+
+    .speed-display {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .speed-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 3rem;
+      text-align: center;
+    }
+
+    .voice-grid {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+
+    .voice-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem .9rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      background: var(--surface);
+      font-size: .88rem;
+      transition: all.2s;
+    }
+
+    .voice-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .shortcut-editor {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .shortcut-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem .9rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      font-size: .85rem;
+    }
+
+    .shortcut-input {
+      padding: .3rem .6rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-size: .82rem;
+      width: 130px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .pronun-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+    }
+
+    .pronun-sym {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      width: 2rem;
+      text-align: center;
+    }
+
+    .pronun-name {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .demo-area {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-top: .75rem;
+      font-size: .85rem;
+    }
+
+    .font-preview {
+      font-size: calc(1rem * var(--font-scale, 1));
+      transition: font-size.3s;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar a configuración de accesibilidad</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="editor.html">Editor</a></li>
+          <li><a href="mentoring.html">Mentores</a></li>
+          <li><a href="progress.html">Progreso</a></li>
+          <li><a href="settings.html" class="active">Configuración</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+    <div class="page-header">
+      <h1 class="page-title">Configuración de accesibilidad</h1>
+      <p class="page-subtitle">Personaliza la experiencia auditiva y visual</p>
+    </div>
+
+    <div class="settings-grid">
+
+      <!-- Velocidad del lector -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Velocidad de voz</h2>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Alt+→ aumenta | Alt+← disminuye (10% cada vez)</p>
+        <div class="speed-display" role="group" aria-label="Control de velocidad de voz">
+          <button class="btn btn-outline btn-sm" id="speed-down" onclick="changeSpeed(-0.1)" aria-label="Disminuir velocidad">
+            <i class="fa-solid fa-minus" aria-hidden="true"></i>
+          </button>
+          <div class="speed-value" id="speed-val" aria-live="polite" aria-label="Velocidad actual">1.0×</div>
+          <button class="btn btn-outline btn-sm" id="speed-up" onclick="changeSpeed(0.1)" aria-label="Aumentar velocidad">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          </button>
+        </div>
+        <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1" aria-label="Velocidad de voz: desliza para ajustar" oninput="setSpeed(parseFloat(this.value))" style="width:100%;margin-top:1rem;accent-color:var(--primary)">
+        <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="testVoice()">
+          <i class="fa-solid fa-volume-high"></i> Probar velocidad
+        </button>
+      </div>
+
+      <!-- Selección de voz -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Voz del sistema</h2>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Elige el perfil de voz que te resulte más cómodo.</p>
+        <div class="voice-grid" id="voice-list" role="radiogroup" aria-label="Seleccionar voz del sistema">
+          <div style="color:var(--text-muted);font-size:.85rem">Cargando voces disponibles...</div>
+        </div>
+      </div>
+
+      <!-- Earcons toggle -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Sonidos de interfaz (Earcons)</h2>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Activar earcons</div>
+            <div class="setting-desc">Sonidos para compilación exitosa, errores y guardado</div>
+          </div>
+          <button class="toggle" id="earcon-toggle" role="switch" aria-checked="true" aria-label="Activar o desactivar sonidos de interfaz (earcons)" onclick="toggleEarcons()"></button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem">
+          <button class="btn btn-ghost btn-sm" onclick="TTS.playEarcon('success')" aria-label="Probar sonido de compilación exitosa">🔔 Éxito</button>
+          <button class="btn btn-ghost btn-sm" onclick="TTS.playEarcon('error')" aria-label="Probar sonido de error">🔕 Error</button>
+          <button class="btn btn-ghost btn-sm" onclick="TTS.playEarcon('save')" aria-label="Probar sonido de guardado">💾 Guardado</button>
+          <button class="btn btn-ghost btn-sm" onclick="TTS.playEarcon('badge')" aria-label="Probar sonido de insignia">🏆 Insignia</button>
+        </div>
+      </div>
+
+      <!-- Alto contraste -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Modo de color</h2>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Alto contraste</div>
+            <div class="setting-desc">Fondo negro, texto blanco/amarillo. WCAG AAA</div>
+          </div>
+          <button class="toggle" id="contrast-toggle" role="switch" aria-checked="false" aria-label="Activar modo de alto contraste" onclick="toggleContrast()"></button>
+        </div>
+        <div class="demo-area" id="contrast-preview" aria-label="Previsualización de contraste">
+          <strong>Vista previa:</strong> Este texto cambiará con el modo de alto contraste.
+        </div>
+      </div>
+
+      <!-- Tamaño de fuente -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Tamaño de fuente</h2>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Escala desde 100% hasta 200%. Los contenedores se adaptan.</p>
+        <div class="speed-display">
+          <button class="btn btn-outline btn-sm" onclick="changeFont(-0.1)" aria-label="Reducir tamaño de fuente">A-</button>
+          <div class="speed-value" id="font-val" aria-live="polite">100%</div>
+          <button class="btn btn-outline btn-sm" onclick="changeFont(0.1)" aria-label="Aumentar tamaño de fuente">A+</button>
+        </div>
+        <input type="range" id="font-slider" min="1" max="2" step="0.1" value="1" aria-label="Tamaño de fuente: desliza para ajustar" oninput="setFont(parseFloat(this.value))" style="width:100%;margin-top:1rem;accent-color:var(--primary)">
+        <div class="font-preview demo-area" id="font-preview" style="margin-top:.75rem">
+          Previsualización del tamaño de texto actual.
+        </div>
+      </div>
+
+      <!-- Reasignación de atajos -->
+      <div class="card" style="grid-column:span 1">
+        <div class="card-header">
+          <h2 class="card-title">Atajos personalizados</h2>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Reasigna atajos que entren en conflicto con JAWS/NVDA.</p>
+        <div class="shortcut-editor" role="group" aria-label="Personalizar atajos de teclado">
+          <div class="shortcut-item">
+            <span>Leer línea</span>
+            <input type="text" class="shortcut-input" id="sc-read" value="Alt+L" aria-label="Atajo para leer línea" onchange="saveShortcut('readLine', this.value)">
+          </div>
+          <div class="shortcut-item">
+            <span>N° de línea</span>
+            <input type="text" class="shortcut-input" id="sc-linenum" value="Alt+N" aria-label="Atajo para número de línea" onchange="saveShortcut('lineNum', this.value)">
+          </div>
+          <div class="shortcut-item">
+            <span>Verificar sintaxis</span>
+            <input type="text" class="shortcut-input" id="sc-syntax" value="Alt+V" aria-label="Atajo para verificar sintaxis" onchange="saveShortcut('syntax', this.value)">
+          </div>
+          <div class="shortcut-item">
+            <span>Ver atajos</span>
+            <input type="text" class="shortcut-input" id="sc-help" value="Alt+H" aria-label="Atajo para ver ayuda" onchange="saveShortcut('help', this.value)">
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:.75rem;width:100%" onclick="resetShortcuts()">
+          Restaurar atajos predeterminados
+        </button>
+      </div>
+
+      <!-- Modo compatibilidad externa -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Lector externo</h2>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Usar NVDA / JAWS externo</div>
+            <div class="setting-desc">Silencia la voz interna. La plataforma solo provee etiquetas ARIA.</div>
+          </div>
+          <button class="toggle" id="external-toggle" role="switch" aria-checked="false" aria-label="Activar modo de lector de pantalla externo (NVDA/JAWS)" onclick="toggleExternalReader()"></button>
+        </div>
+        <div class="alert alert-info" style="margin-top:.75rem;font-size:.82rem">
+          <i class="fa-solid fa-info-circle"></i>
+          Con esta opción activa, la síntesis de voz interna se silencia. Tu lector de pantalla (NVDA/JAWS) leerá las etiquetas ARIA de la plataforma.
+        </div>
+      </div>
+
+      <!-- Diccionario de pronunciación -->
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-header">
+          <h2 class="card-title">Diccionario de pronunciación</h2>
+        </div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Símbolos de programación leídos con nombres lógicos.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.5rem" id="pronun-list" role="list" aria-label="Diccionario de pronunciación de símbolos"></div>
+        <div style="margin-top:1rem">
+          <button class="btn btn-primary btn-sm" onclick="testPronunciation()">
+            <i class="fa-solid fa-volume-high"></i> Probar pronunciación
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Save settings button -->
+    <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;gap:.75rem">
+      <button class="btn btn-ghost" onclick="resetAll()">Restaurar todo</button>
+      <button class="btn btn-primary" onclick="saveAll()">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar configuración
+      </button>
+    </div>
+  </main>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    Auth.requireStudent();
+    let settings = DB.get('a11y') || {
+      rate: 1,
+      pitch: 1,
+      earcons: true,
+      externalReader: false,
+      highContrast: false,
+      fontScale: 1
+    };
+
+    // Restore UI from saved settings
+    function restoreUI() {
+      document.getElementById('speed-val').textContent = settings.rate.toFixed(1) + '×';
+      document.getElementById('speed-slider').value = settings.rate;
+      document.getElementById('font-val').textContent = Math.round(settings.fontScale * 100) + '%';
+      document.getElementById('font-slider').value = settings.fontScale;
+      setToggle('earcon-toggle', settings.earcons !== false);
+      setToggle('contrast-toggle', !!settings.highContrast);
+      setToggle('external-toggle', !!settings.externalReader);
+      if (settings.highContrast) document.body.classList.add('high-contrast');
+      document.documentElement.style.setProperty('--font-scale', settings.fontScale || 1);
+      TTS.rate = settings.rate || 1;
+      TTS.earcons = settings.earcons !== false;
+      TTS.externalReader = !!settings.externalReader;
+
+      const customs = DB.get('customShortcuts') || {};
+      if (customs.readLine) document.getElementById('sc-read').value = customs.readLine;
+      if (customs.lineNum) document.getElementById('sc-linenum').value = customs.lineNum;
+      if (customs.syntax) document.getElementById('sc-syntax').value = customs.syntax;
+      if (customs.help) document.getElementById('sc-help').value = customs.help;
+    }
+
+    function setToggle(id, on) {
+      const btn = document.getElementById(id);
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-checked', on);
+    }
+
+    // Speed
+    function changeSpeed(delta) {
+      const newRate = Math.max(0.5, Math.min(3, +(settings.rate + delta).toFixed(1)));
+      setSpeed(newRate);
+    }
+
+    function setSpeed(val) {
+      settings.rate = val;
+      TTS.rate = val;
+      document.getElementById('speed-val').textContent = val.toFixed(1) + '×';
+      document.getElementById('speed-slider').value = val;
+      TTS.speak('Velocidad: ' + val.toFixed(1));
+    }
+
+    function testVoice() {
+      TTS.speak('Esta es la velocidad actual del lector de pantalla. Línea 1. def calcular promedio de lista. Nivel 1, si no lista, retornar cero.', true);
+    }
+
+    // Voice selection
+    function loadVoices() {
+      const voices = window.speechSynthesis?.getVoices() || [];
+      const list = document.getElementById('voice-list');
+      const esVoices = voices.filter(v => v.lang.startsWith('es') || v.lang.startsWith('ES'));
+      const displayVoices = esVoices.length > 0 ? esVoices : voices.slice(0, 6);
+      if (displayVoices.length === 0) {
+        list.innerHTML = '<p style="font-size:.85rem;color:var(--text-muted)">No se detectaron voces. Tu navegador puede no soportar Web Speech API o las voces no están instaladas.</p>';
+        return;
+      }
+      list.innerHTML = displayVoices.map((v, i) => `
+ <button type="button" class="voice-btn ${settings.voiceUri === v.voiceURI ? 'selected' : ''}"
+ role="radio" aria-checked="${settings.voiceUri === v.voiceURI}"
+ aria-label="Voz: ${v.name}, idioma ${v.lang}"
+ onclick="selectVoice('${v.voiceURI.replace(/'/g,"\\'")}', '${v.name.replace(/'/g,"\\'")}', this)">
+ <span>${v.name} <small style="color:var(--text-muted)">(${v.lang})</small></span>
+ <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+ </button>`).join('');
+    }
+
+    function selectVoice(uri, name, btn) {
+      settings.voiceUri = uri;
+      document.querySelectorAll('.voice-btn').forEach(b => {
+        b.classList.remove('selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+      btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
+      const voices = window.speechSynthesis?.getVoices() || [];
+      TTS.voice = voices.find(v => v.voiceURI === uri) || null;
+      TTS.speak('Voz seleccionada: ' + name + '. Esta es una prueba de audio.');
+    }
+
+    // Earcons
+    function toggleEarcons() {
+      settings.earcons = !settings.earcons;
+      TTS.earcons = settings.earcons;
+      setToggle('earcon-toggle', settings.earcons);
+      TTS.speak(settings.earcons ? 'Sonidos de interfaz activados.' : 'Sonidos de interfaz desactivados. Solo voz.');
+      if (settings.earcons) TTS.playEarcon('notify');
+    }
+
+    // High contrast
+    function toggleContrast() {
+      settings.highContrast = !settings.highContrast;
+      document.body.classList.toggle('high-contrast', settings.highContrast);
+      setToggle('contrast-toggle', settings.highContrast);
+      TTS.speak(settings.highContrast ? 'Modo alto contraste activado. Fondo negro, texto blanco.' : 'Modo alto contraste desactivado. Colores normales.');
+    }
+
+    // Font size
+    function changeFont(delta) {
+      const newScale = Math.max(1, Math.min(2, +(settings.fontScale + delta).toFixed(1)));
+      setFont(newScale);
+    }
+
+    function setFont(val) {
+      settings.fontScale = val;
+      document.documentElement.style.setProperty('--font-scale', val);
+      document.getElementById('font-val').textContent = Math.round(val * 100) + '%';
+      document.getElementById('font-slider').value = val;
+      document.getElementById('font-preview').style.fontSize = val + 'rem';
+      TTS.speak('Tamaño de fuente: ' + Math.round(val * 100) + ' por ciento.');
+    }
+
+    // Custom shortcuts
+    function saveShortcut(action, key) {
+      const customs = DB.get('customShortcuts') || {};
+      customs[action] = key;
+      DB.set('customShortcuts', customs);
+      TTS.speak('Atajo actualizado: ' + action + ' ahora es ' + key);
+    }
+
+    function resetShortcuts() {
+      DB.set('customShortcuts', {});
+      document.getElementById('sc-read').value = 'Alt+L';
+      document.getElementById('sc-linenum').value = 'Alt+N';
+      document.getElementById('sc-syntax').value = 'Alt+V';
+      document.getElementById('sc-help').value = 'Alt+H';
+      TTS.speak('Atajos restaurados a valores predeterminados.');
+      toast('Atajos restaurados.', 'success');
+    }
+
+    // External reader
+    function toggleExternalReader() {
+      settings.externalReader = !settings.externalReader;
+      TTS.externalReader = settings.externalReader;
+      setToggle('external-toggle', settings.externalReader);
+      if (settings.externalReader) {
+        TTS.synth && TTS.synth.cancel();
+        TTS.announce('Modo lector externo activado. La síntesis de voz interna está silenciada. Usa NVDA o JAWS.');
+      } else {
+        TTS.speak('Lector interno reactivado. Bienvenido de vuelta.');
+      }
+    }
+
+    // Pronunciation dictionary
+    function renderPronunciation() {
+      const pairs = Object.entries(TTS.pronunciationMap).slice(0, 16);
+      document.getElementById('pronun-list').innerHTML = pairs.map(([sym, name]) => `
+ <div role="listitem" style="display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;background:var(--bg-secondary);border-radius:var(--radius-sm);font-size:.82rem"
+ aria-label="El símbolo ${sym} se pronuncia como ${name}">
+ <code style="font-size:1rem;font-weight:700;color:var(--primary);min-width:1.5rem">${sym}</code>
+ <span style="color:var(--text-muted)">→</span>
+ <span class="pronun-name">"${name}"</span>
+ </div>`).join('');
+    }
+
+    function testPronunciation() {
+      TTS.speakCode('def calcular(x, y) { return x + y; }');
+    }
+
+    function saveAll() {
+      DB.set('a11y', settings);
+      TTS.speak('Configuración guardada correctamente.', true);
+      TTS.playEarcon('success');
+      toast('Configuración guardada.', 'success');
+    }
+
+    function resetAll() {
+      settings = {
+        rate: 1,
+        pitch: 1,
+        earcons: true,
+        externalReader: false,
+        highContrast: false,
+        fontScale: 1
+      };
+      DB.set('a11y', settings);
+      document.body.classList.remove('high-contrast');
+      document.documentElement.style.setProperty('--font-scale', 1);
+      TTS.rate = 1;
+      TTS.earcons = true;
+      TTS.externalReader = false;
+      restoreUI();
+      TTS.speak('Toda la configuración ha sido restaurada a los valores predeterminados.');
+      toast('Configuración restaurada.', 'info');
+    }
+
+    // Init
+    restoreUI();
+    renderPronunciation();
+    if (window.speechSynthesis) {
+      if (speechSynthesis.getVoices().length) loadVoices();
+      else speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    }
+    setTimeout(() => TTS.speak('Página de configuración de accesibilidad. Aquí puedes ajustar la velocidad de voz, cambiar la voz del sistema, activar alto contraste y más. Usa Tab para navegar entre las opciones.'), 500);
+  </script>
+</body>
+
+</html>

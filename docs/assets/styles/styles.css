@@ -3,29 +3,29 @@
    ========================================= */
 /* ===== SKIP LINK (accesibilidad por teclado) ===== */
 .skip-link {
-    position: absolute;
-    top: -100%;
-    left: 1rem;
-    background: #005B60;
-    color: #fff;
-    padding: .5rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
-    z-index: 9999;
-    transition: top .2s;
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  background: #005B60;
+  color: #fff;
+  padding: .5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 9999;
+  transition: top .2s;
 }
 .skip-link:focus { top: 1rem; }
 
 .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 :root {
@@ -190,8 +190,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .logo-img {
-    height: 40px;
-    width: auto;
+    height: 40px; 
+    width: auto;  
     display: block;
 }
 

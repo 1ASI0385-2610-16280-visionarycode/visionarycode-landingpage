@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitudes — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .req-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      transition: border-color.2s, box-shadow.2s;
+    }
+
+    .req-card.new-req {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+      animation: highlight 1s ease 2;
+    }
+
+    @keyframes highlight {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 3px var(--primary-light)
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px var(--primary-light)
+      }
+    }
+
+    .req-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .25rem .75rem;
+      border-radius: 99px;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .waiting-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .req-time {
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .avail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar a la lista de solicitudes</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="requests.html" class="active">Solicitudes</a></li>
+          <li><a href="volunteer.html">Horas</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+    <div class="page-header">
+      <h1 class="page-title">Solicitudes de mentoría</h1>
+      <p class="page-subtitle">Recibe y acepta solicitudes de estudiantes en tiempo real</p>
+    </div>
+
+    <!-- Availability toggle -->
+    <div class="avail-header" role="region" aria-label="Control de disponibilidad">
+      <div>
+        <strong>Mi disponibilidad</strong>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem">
+          Controla cuándo recibes solicitudes
+        </p>
+      </div>
+      <div class="toggle-wrap">
+        <button class="toggle" id="avail-toggle" role="switch" aria-checked="false" aria-label="Cambiar disponibilidad" onclick="toggleAvailability()"></button>
+        <span id="avail-label" style="font-weight:700;font-size:.9rem">Ocupado</span>
+      </div>
+    </div>
+
+    <!-- Pending requests -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h2 class="card-title">Solicitudes pendientes
+          <span id="pending-count" class="badge badge-primary" style="margin-left:.5rem" aria-live="polite">0</span>
+        </h2>
+        <button class="btn btn-ghost btn-sm" onclick="refreshRequests()" aria-label="Actualizar lista de solicitudes">
+          <i class="fa-solid fa-rotate-right"></i> Actualizar
+        </button>
+      </div>
+      <div id="pending-list" role="list" aria-label="Lista de solicitudes pendientes" aria-live="polite"></div>
+    </div>
+
+    <!-- Active sessions -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Sesión activa</h2>
+      </div>
+      <div id="active-session" role="region" aria-label="Sesión de tutoría activa" aria-live="polite"></div>
+    </div>
+
+  </main>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireMentor();
+    let pollingInterval;
+
+    if (user) {
+      setAvailUI(user.available || false);
+      renderRequests();
+      renderActiveSession();
+      // Poll for new requests every 8s to simulate real-time
+      pollingInterval = setInterval(() => {
+        renderRequests();
+        renderActiveSession();
+      }, 8000);
+    }
+
+    function setAvailUI(on) {
+      const toggle = document.getElementById('avail-toggle');
+      const label = document.getElementById('avail-label');
+      toggle.classList.toggle('on', on);
+      toggle.setAttribute('aria-checked', on);
+      label.textContent = on ? 'En línea' : 'Ocupado';
+      label.style.color = on ? 'var(--success)' : 'var(--text-muted)';
+    }
+
+    function toggleAvailability() {
+      const newState = Mentoring.toggleMentorAvailability(user.id);
+      setAvailUI(newState);
+      TTS.speak(newState ? 'Ahora estás en línea. Recibirás notificaciones de estudiantes.' : 'Ahora estás marcado como ocupado.');
+      TTS.playEarcon('notify');
+      toast(newState ? 'En línea ✓' : 'Ocupado', newState ? 'success' : 'info');
+    }
+
+    function renderRequests() {
+      const myLangs = user.langs || [];
+      const all = Mentoring.getPendingRequests();
+      const mine = all.filter(r => !r.lang || myLangs.includes(r.lang));
+      document.getElementById('pending-count').textContent = mine.length;
+
+      const list = document.getElementById('pending-list');
+      if (mine.length === 0) {
+        list.innerHTML = `<div class="empty-state">
+ <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+ <p>No hay solicitudes pendientes en este momento.</p>
+ <p style="font-size:.85rem;margin-top:.5rem">Cuando un estudiante solicite ayuda, aparecerá aquí con una alerta sonora.</p>
+ </div>`;
+        return;
+      }
+
+      // Notify if there are new requests
+      const prevCount = parseInt(list.dataset.count || '0');
+      if (mine.length > prevCount && prevCount >= 0) {
+        TTS.playEarcon('notify');
+        if (mine.length > prevCount) TTS.speak(`Nueva solicitud de mentoría. Lenguaje: ${mine[mine.length-1].lang || 'General'}. Presiona Aceptar para conectarte.`);
+      }
+      list.dataset.count = mine.length;
+
+      const now = new Date();
+      list.innerHTML = mine.map(r => {
+        const created = new Date(r.createdAt);
+        const mins = Math.round((now - created) / 60000);
+        return `<div class="req-card new-req" role="listitem"
+ aria-label="Solicitud en ${r.lang||'general'}, hace ${mins} minuto${mins!==1?'s':''}">
+ <div>
+ <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem">
+ <span class="req-badge waiting-badge">
+ <i class="fa-solid fa-clock" aria-hidden="true"></i> Esperando
+ </span>
+ ${r.lang ? `<span class="badge badge-primary">${r.lang}</span>` : '<span class="badge badge-warning">General</span>'}
+ <span class="req-time">Hace ${mins} min</span>
+ </div>
+ <p style="font-size:.9rem;margin-bottom:.25rem"><strong>Problema:</strong> ${r.problem}</p>
+ <p style="font-size:.8rem;color:var(--text-muted)">El estudiante está esperando en la cola.</p>
+ </div>
+ <div style="display:flex;flex-direction:column;gap:.5rem">
+ <button class="btn btn-success" onclick="acceptRequest('${r.id}')"
+ aria-label="Aceptar solicitud de mentoría en ${r.lang||'general'}">
+ <i class="fa-solid fa-check"></i> Aceptar
+ </button>
+ <button class="btn btn-ghost btn-sm" onclick="ignoreRequest('${r.id}')"
+ aria-label="Ignorar esta solicitud">
+ <i class="fa-solid fa-xmark"></i> Ignorar
+ </button>
+ </div>
+ </div>`;
+      }).join('');
+    }
+
+    function renderActiveSession() {
+      const session = DB.get('activeSession');
+      const el = document.getElementById('active-session');
+      if (!session || session.mentorId !== user.id) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem;padding:.5rem 0">No tienes ninguna sesión activa ahora mismo.</p>';
+        return;
+      }
+      const start = new Date(session.startTime);
+      const mins = Math.round((new Date() - start) / 60000);
+      el.innerHTML = `<div class="alert alert-success" style="flex-direction:column;align-items:flex-start;gap:.75rem">
+ <div>
+ <strong><i class="fa-solid fa-circle-dot" style="color:var(--success)"></i> Sesión en curso</strong>
+ <div style="font-size:.85rem;margin-top:.25rem">Lenguaje: ${session.lang||'General'} — Duración: ${mins} min</div>
+ <div style="font-size:.85rem">Duda: ${session.problem}</div>
+ </div>
+ <a href="../session/index.html" class="btn btn-success">
+ <i class="fa-solid fa-arrow-right"></i> Volver a la sesión
+ </a>
+ </div>`;
+    }
+
+    // Accept request
+    function acceptRequest(reqId) {
+      Mentoring.acceptRequest(reqId, user.id);
+      TTS.speak('Solicitud aceptada. Redirigiendo al entorno colaborativo del alumno.', true);
+      TTS.playEarcon('success');
+      toast('Conectando con el estudiante…', 'success');
+      clearInterval(pollingInterval);
+      setTimeout(() => {
+        window.location.href = '../session/index.html';
+      }, 1200);
+    }
+
+    function ignoreRequest(reqId) {
+      let queue = DB.get('queue') || [];
+      queue = queue.filter(q => q.id !== reqId);
+      DB.set('queue', queue);
+      renderRequests();
+      TTS.speak('Solicitud ignorada.');
+      toast('Solicitud ignorada.', 'info');
+    }
+
+    function refreshRequests() {
+      renderRequests();
+      renderActiveSession();
+      TTS.speak('Lista actualizada.');
+      toast('Lista actualizada.', 'info');
+    }
+
+    setTimeout(() => {
+      const count = Mentoring.getPendingRequests().length;
+      TTS.speak('Página de solicitudes de mentoría. Tienes ' + count + ' solicitud' + (count !== 1 ? 'es' : '') + ' pendiente' + (count !== 1 ? 's' : '') + '.');
+    }, 500);
+  </script>
+</body>
+
+</html>
