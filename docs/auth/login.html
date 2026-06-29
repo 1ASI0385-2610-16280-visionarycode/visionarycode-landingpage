@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    body {
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .auth-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow);
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      color: var(--primary);
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      text-decoration: none;
+    }
+
+    .auth-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: .25rem;
+    }
+
+    .auth-sub {
+      color: var(--text-muted);
+      font-size: .9rem;
+      margin-bottom: 2rem;
+    }
+
+    .demo-accounts {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: .82rem;
+    }
+
+    .demo-accounts strong {
+      display: block;
+      margin-bottom: .4rem;
+      color: var(--text);
+    }
+
+    .demo-accounts code {
+      font-family: monospace;
+      background: var(--border);
+      padding: .1rem .4rem;
+      border-radius: 3px;
+      font-size: .78rem;
+    }
+
+    .demo-btn {
+      cursor: pointer;
+      color: var(--primary);
+      border: none;
+      background: none;
+      font-size: .82rem;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar al formulario</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <div class="nav-actions">
+        <a href="register.html" class="btn btn-primary btn-sm">Registrarse</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="auth-wrap">
+    <div class="auth-card">
+      <a href="../index.html" class="auth-logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <h1 class="auth-title">Bienvenido de vuelta</h1>
+      <p class="auth-sub">Inicia sesión para continuar tu aprendizaje accesible.</p>
+
+      <!-- Cuentas demo -->
+      <div class="demo-accounts" role="region" aria-label="Cuentas de demostración">
+        <strong>Cuentas demo:</strong>
+        <div style="display:flex;flex-direction:column;gap:.3rem">
+          <span>Estudiante: <code>estudiante@vc.pe</code>
+            <button class="demo-btn" onclick="fillDemo('student')" aria-label="Usar cuenta de estudiante demo">usar</button>
+          </span>
+          <span>Mentor: <code>carlos@vc.pe</code>
+            <button class="demo-btn" onclick="fillDemo('mentor')" aria-label="Usar cuenta de mentor demo">usar</button>
+          </span>
+        </div>
+      </div>
+
+      <form id="login-form" novalidate aria-label="Formulario de inicio de sesión">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="tu@correo.com" required aria-required="true" aria-describedby="email-err">
+          <span id="email-err" class="error-msg" role="alert" aria-live="polite"></span>
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div style="position:relative">
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required aria-required="true" aria-describedby="pw-err">
+            <button type="button" id="toggle-pw" class="btn btn-icon" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);font-size:.9rem" aria-label="Mostrar contraseña">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <span id="pw-err" class="error-msg" role="alert" aria-live="polite"></span>
+        </div>
+
+        <div id="login-error" class="alert alert-error" role="alert" style="display:none;margin-bottom:1rem"></div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%" id="submit-btn">
+          <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+          Iniciar sesión
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:1.25rem;font-size:.9rem;color:var(--text-muted)">
+        ¿No tienes cuenta? <a href="register.html" style="color:var(--primary);font-weight:600">Regístrate gratis</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner"><span>© 2026 VisionaryCode</span></div>
+  </footer>
+
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    function fillDemo(type) {
+      if (type === 'student') {
+        document.getElementById('email').value = 'estudiante@vc.pe';
+        document.getElementById('password').value = 'demo1234';
+      } else {
+        document.getElementById('email').value = 'carlos@vc.pe';
+        document.getElementById('password').value = 'demo1234';
+      }
+      TTS.speak('Cuenta de ' + (type === 'student' ? 'estudiante' : 'mentor') + ' cargada. Presiona Enter para iniciar sesión.');
+    }
+
+    document.getElementById('toggle-pw').addEventListener('click', function() {
+      const pw = document.getElementById('password');
+      const showing = pw.type === 'text';
+      pw.type = showing ? 'password' : 'text';
+      this.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+      this.querySelector('i').className = 'fa-solid fa-eye' + (showing ? '' : '-slash');
+      TTS.speak(showing ? 'Contraseña oculta' : 'Contraseña visible');
+    });
+
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const pw = document.getElementById('password').value;
+      const errBox = document.getElementById('login-error');
+      errBox.style.display = 'none';
+
+      if (!email) {
+        document.getElementById('email-err').textContent = 'Ingresa tu correo.';
+        TTS.speak('Error: ingresa tu correo.');
+        return;
+      }
+      if (!pw) {
+        document.getElementById('pw-err').textContent = 'Ingresa tu contraseña.';
+        TTS.speak('Error: ingresa tu contraseña.');
+        return;
+      }
+
+      document.getElementById('email-err').textContent = '';
+      document.getElementById('pw-err').textContent = '';
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Ingresando...';
+
+      setTimeout(() => {
+        const user = Auth.login(email, pw);
+        if (!user) {
+          errBox.style.display = 'flex';
+          errBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Correo o contraseña incorrectos. Usa una cuenta demo o regístrate.';
+          TTS.speak('Error: correo o contraseña incorrectos.', true);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión';
+          return;
+        }
+        TTS.speak('Inicio de sesión exitoso. Bienvenido ' + user.name);
+        TTS.playEarcon('success');
+        if (user.role === 'student') window.location.href = '../student/dashboard.html';
+        else window.location.href = '../mentor/dashboard.html';
+      }, 600);
+    });
+  </script>
+</body>
+
+</html>

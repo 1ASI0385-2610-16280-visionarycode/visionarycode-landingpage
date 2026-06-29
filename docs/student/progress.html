@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Progreso — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .progress-hero {
+      background: linear-gradient(135deg, #005B60, #00363A);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-hero h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: .5rem;
+    }
+
+    .progress-hero.pct {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .progress-hero.bar-wrap {
+      background: rgba(255, 255, 255, .3);
+      border-radius: 99px;
+      height: 14px;
+      margin-top: 1rem;
+    }
+
+    .progress-hero.bar-fill {
+      background: #fff;
+      height: 100%;
+      border-radius: 99px;
+      transition: width.8s ease;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .badge-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+      transition: border-color.2s, box-shadow.2s;
+    }
+
+    .badge-card.earned {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .badge-card.locked {
+      opacity: .4;
+      filter: grayscale(1);
+    }
+
+    .badge-emoji {
+      font-size: 2.5rem;
+    }
+
+    .badge-name {
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    .badge-desc {
+      font-size: .75rem;
+      color: var(--text-muted);
+    }
+
+    .badge-status {
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .badge-card.earned .badge-status {
+      color: var(--success);
+    }
+
+    .module-progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      margin-top: .4rem;
+    }
+
+    .module-progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--primary);
+      transition: width.6s;
+    }
+
+    .cert-card {
+      background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .cert-card.cert-icon {
+      font-size: 3rem;
+      margin-bottom: .75rem;
+    }
+
+    .cert-locked {
+      opacity: .5;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar al contenido de progreso</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="editor.html">Editor</a></li>
+          <li><a href="mentoring.html">Mentores</a></li>
+          <li><a href="progress.html" class="active">Progreso</a></li>
+          <li><a href="settings.html">Configuración</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+    <div class="page-header">
+      <h1 class="page-title">Mi progreso</h1>
+      <p class="page-subtitle">Seguimiento de avance, insignias y certificados accesibles</p>
+    </div>
+
+    <!-- Progreso general -->
+    <div class="progress-hero" role="region" aria-labelledby="prog-heading">
+      <h2 id="prog-heading">Avance del curso</h2>
+      <div style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div class="pct" id="prog-pct" aria-live="polite">0%</div>
+          <div style="font-size:.9rem;opacity:.8">completado</div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.4rem">
+            <span>Módulo <span id="current-module">3</span> de 5</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:none;cursor:pointer" onclick="announceProgress()" aria-label="Escuchar resumen de progreso">
+              <i class="fa-solid fa-volume-high"></i> Escuchar resumen
+            </button>
+          </div>
+          <div class="bar-wrap" role="progressbar" aria-label="Progreso del curso" id="hero-bar-wrap">
+            <div class="bar-fill" id="hero-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="dash-grid" style="margin-bottom:1.5rem" role="region" aria-label="Estadísticas de aprendizaje">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+        <div>
+          <div class="stat-value" id="stat-hours">0h</div>
+          <div class="stat-label">Horas de estudio</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div>
+          <div class="stat-value" id="stat-sessions">0</div>
+          <div class="stat-label">Tutorías recibidas</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-code"></i></div>
+        <div>
+          <div class="stat-value" id="stat-runs">0</div>
+          <div class="stat-label">Ejecuciones de código</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+        <div>
+          <div class="stat-value" id="stat-badges-count">0/5</div>
+          <div class="stat-label">Insignias obtenidas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Módulos detallados -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h2 class="card-title">Progreso por módulo</h2>
+        <button class="btn btn-ghost btn-sm" onclick="announceProgress()">
+          <i class="fa-solid fa-volume-high"></i> Escuchar
+        </button>
+      </div>
+      <div id="module-list" role="list" aria-label="Lista de módulos con progreso"></div>
+    </div>
+
+    <!-- Insignias -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h2 class="card-title">Insignias auditivas</h2>
+        <span id="badges-earned-count" style="font-size:.85rem;color:var(--text-muted)"></span>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Al ganar una insignia, recibirás una felicitación sonora especial.</p>
+      <div class="badge-grid" id="badge-grid" role="list" aria-label="Insignias del estudiante"></div>
+      <div style="margin-top:1rem">
+        <button class="btn btn-outline btn-sm" onclick="simulateBadge()" aria-label="Demostrar insignia auditiva">
+          <i class="fa-solid fa-volume-high"></i> Demostrar insignia auditiva
+        </button>
+      </div>
+    </div>
+
+    <!-- Certificado -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Certificado de finalización</h2>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1.25rem">El certificado es un PDF accesible con etiquetas ARIA para lectores de pantalla.</p>
+      <div id="cert-area"></div>
+    </div>
+
+  </main>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireStudent();
+
+    const MODULES = [{
+        name: 'Fundamentos de Python',
+        pct: 100,
+        done: true
+      },
+      {
+        name: 'Estructuras de datos',
+        pct: 100,
+        done: true
+      },
+      {
+        name: 'Funciones y recursión',
+        pct: 65,
+        done: false
+      },
+      {
+        name: 'Programación orientada a objetos',
+        pct: 0,
+        done: false
+      },
+      {
+        name: 'Proyecto final',
+        pct: 0,
+        done: false
+      },
+    ];
+
+    if (user) {
+      const prog = user.progress || 65;
+      document.getElementById('prog-pct').textContent = prog + '%';
+      document.getElementById('hero-bar').style.width = prog + '%';
+      document.getElementById('hero-bar-wrap').setAttribute('aria-valuenow', prog);
+
+      // Stats
+      const hist = (DB.get('history') || []).filter(h => h.studentId === user.id);
+      document.getElementById('stat-sessions').textContent = hist.length;
+      const totalMin = hist.reduce((a, h) => a + (h.duration || 0), 0);
+      document.getElementById('stat-hours').textContent = Math.round(totalMin / 60) + 'h';
+      document.getElementById('stat-runs').textContent = DB.get('runCount_' + user.id) || 12;
+      const earnedBadges = user.badges || [];
+      document.getElementById('stat-badges-count').textContent = earnedBadges.length + '/' + Object.keys(Progress.BADGES).length;
+
+      // Modules
+      const modEl = document.getElementById('module-list');
+      modEl.innerHTML = MODULES.map((m, i) => `
+ <div role="listitem" style="padding:.85rem 0;border-bottom:1px solid var(--border)"
+ aria-label="Módulo ${i+1}: ${m.name}, ${m.pct}% completado">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+ <span style="font-weight:600;font-size:.9rem">
+ ${m.done ? '<i class="fa-solid fa-circle-check" style="color:var(--success)" aria-hidden="true"></i>' :
+ m.pct > 0 ? '<i class="fa-solid fa-spinner fa-spin" style="color:var(--primary)" aria-hidden="true"></i>' :
+ '<i class="fa-solid fa-lock" style="color:var(--text-muted)" aria-hidden="true"></i>'}
+ Módulo ${i+1}: ${m.name}
+ </span>
+ <span style="font-size:.85rem;font-weight:700;color:${m.done?'var(--success)':'var(--primary)'}">${m.pct}%</span>
+ </div>
+ <div class="module-progress-bar" role="progressbar" aria-valuenow="${m.pct}" aria-valuemin="0" aria-valuemax="100">
+ <div class="module-progress-fill" style="width:${m.pct}%"></div>
+ </div>
+ </div>`).join('');
+
+      // Badges
+      const badgeGrid = document.getElementById('badge-grid');
+      document.getElementById('badges-earned-count').textContent = earnedBadges.length + ' de ' + Object.keys(Progress.BADGES).length + ' obtenidas';
+      badgeGrid.innerHTML = Object.entries(Progress.BADGES).map(([id, b]) => {
+        const isEarned = earnedBadges.includes(id);
+        return `<div class="badge-card ${isEarned?'earned':'locked'}" role="listitem"
+ aria-label="${b.name}. ${b.desc}. ${isEarned?'Obtenida':'Pendiente'}">
+ <span class="badge-emoji" aria-hidden="true">${b.icon}</span>
+ <span class="badge-name">${b.name}</span>
+ <span class="badge-desc">${b.desc}</span>
+ <span class="badge-status">${isEarned ? '✓ Obtenida' : '🔒 Pendiente'}</span>
+ </div>`;
+      }).join('');
+
+      // Certificate
+      const certArea = document.getElementById('cert-area');
+      if (prog >= 100) {
+        certArea.innerHTML = `<div class="cert-card" role="region" aria-label="Certificado disponible">
+ <div class="cert-icon" aria-hidden="true">🎓</div>
+ <h3 style="margin-bottom:.5rem">¡Felicitaciones, ${user.name.split(' ')[0]}!</h3>
+ <p style="color:var(--text-muted);margin-bottom:1.25rem">Has completado el curso. Tu certificado está listo.</p>
+ <button class="btn btn-primary btn-lg" onclick="generateCertificate('student')" aria-label="Descargar certificado accesible en PDF">
+ <i class="fa-solid fa-download"></i> Descargar Certificado PDF accesible
+ </button>
+ <p style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem">El PDF incluye etiquetas ARIA compatibles con NVDA y JAWS.</p>
+ </div>`;
+      } else {
+        certArea.innerHTML = `<div class="cert-card cert-locked" role="region" aria-label="Certificado pendiente">
+ <div class="cert-icon" aria-hidden="true">🔒</div>
+ <h3 style="margin-bottom:.5rem">Certificado pendiente</h3>
+ <p style="color:var(--text-muted);margin-bottom:1rem">Completa el 100% del curso para desbloquear tu certificado PDF accesible.</p>
+ <div class="progress-bar-wrap"><div class="progress-bar" style="width:${prog}%"></div></div>
+ <p style="font-size:.85rem;margin-top:.5rem">Progreso actual: ${prog}% — Te falta ${100-prog}% más</p>
+ <button class="btn btn-outline" style="margin-top:1rem" onclick="simulateComplete()" aria-label="Simular completar el curso para ver el certificado">
+ Simular finalización (demo)
+ </button>
+ </div>`;
+      }
+
+      // Welcome TTS
+      setTimeout(() => TTS.speak('Mi progreso. Módulo actual completado al ' + prog + ' por ciento. Tienes ' + earnedBadges.length + ' insignias. Presiona el botón Escuchar para más detalles.'), 500);
+    }
+
+    // Announce progress
+    function announceProgress() {
+      const prog = user?.progress || 65;
+      const earned = (user?.badges || []).length;
+      const hist = (DB.get('history') || []).filter(h => h.studentId === user?.id);
+      TTS.speak(`Resumen de progreso: Módulo actual completado al ${prog} por ciento. Has completado 3 de 5 módulos. Tienes ${hist.length} tutorías recibidas y ${earned} insignias ganadas.`, true);
+    }
+
+    // Simulate badge sound
+    function simulateBadge() {
+      TTS.playEarcon('badge');
+      setTimeout(() => TTS.speak('¡Felicidades! Obtuviste la insignia Acelerador por completar el 50 por ciento del curso.', true), 600);
+      toast('🏆 Demostración: insignia auditiva reproducida', 'success', 3000);
+    }
+
+    // Demo: simulate course completion
+    function simulateComplete() {
+      const students = DB.get('students') || [];
+      const s = students.find(s => s.id === user.id);
+      if (s) {
+        s.progress = 100;
+        s.badges = Object.keys(Progress.BADGES);
+        DB.set('students', students);
+        DB.set('currentUser', s);
+      }
+      TTS.playEarcon('badge');
+      TTS.speak('¡Felicitaciones! Has completado el curso. Tu certificado está disponible.', true);
+      setTimeout(() => location.reload(), 1500);
+    }
+  </script>
+</body>
+
+</html>
