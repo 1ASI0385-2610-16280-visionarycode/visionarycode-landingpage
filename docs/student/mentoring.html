@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscar Mentor — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .mentor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .waiting-banner {
+      background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .waiting-pulse {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .waiting-dots {
+      display: flex;
+      gap: .3rem;
+    }
+
+    .waiting-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: bounce.9s infinite;
+    }
+
+    .waiting-dots span:nth-child(2) {
+      animation-delay: .2s;
+    }
+
+    .waiting-dots span:nth-child(3) {
+      animation-delay: .4s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-6px)
+      }
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .report-form textarea {
+      width: 100%;
+      padding: .65rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: .9rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .rating-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar al contenido de mentoría</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Rating modal -->
+  <div id="rating-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rating-title" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="rating-title">Calificar tutoría</h2>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('rating-modal')" aria-label="Cerrar">✕</button>
+      </div>
+      <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem">Usa las flechas del teclado para seleccionar la calificación.</p>
+      <div class="rating-section">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:.5rem">Calificación (1–5 estrellas)</label>
+          <div class="stars-input" id="star-input" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">
+            <button aria-label="1 estrella" data-val="1" onclick="setRating(1)" class="star-btn">★</button>
+            <button aria-label="2 estrellas" data-val="2" onclick="setRating(2)" class="star-btn">★</button>
+            <button aria-label="3 estrellas" data-val="3" onclick="setRating(3)" class="star-btn">★</button>
+            <button aria-label="4 estrellas" data-val="4" onclick="setRating(4)" class="star-btn">★</button>
+            <button aria-label="5 estrellas" data-val="5" onclick="setRating(5)" class="star-btn">★</button>
+          </div>
+        </div>
+        <input type="hidden" id="rating-history-id">
+        <button class="btn btn-primary" onclick="submitRating()">Enviar calificación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report modal -->
+  <div id="report-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="report-title" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="report-title">Reportar problema</h2>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('report-modal')" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="alert alert-info" style="margin-bottom:1rem;font-size:.85rem"><i class="fa-solid fa-shield-halved"></i> Tu identidad será protegida. El reporte es anónimo.</p>
+      <div class="form-group">
+        <label for="report-reason">Describe lo ocurrido</label>
+        <textarea id="report-reason" class="report-form" rows="4" placeholder="Describe brevemente el problema con el mentor..."></textarea>
+      </div>
+      <input type="hidden" id="report-mentor-id">
+      <button class="btn btn-danger" onclick="submitReport()" style="width:100%">
+        <i class="fa-solid fa-flag"></i> Enviar reporte anónimo
+      </button>
+    </div>
+  </div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="editor.html">Editor</a></li>
+          <li><a href="mentoring.html" class="active">Mentores</a></li>
+          <li><a href="progress.html">Progreso</a></li>
+          <li><a href="settings.html">Configuración</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+    <div class="page-header">
+      <h1 class="page-title">Buscar mentor</h1>
+      <p class="page-subtitle">Emparejamiento inteligente por lenguaje de programación</p>
+    </div>
+
+    <!-- Cola de espera activa -->
+    <div id="waiting-banner" class="waiting-banner" style="display:none" role="status" aria-live="polite">
+      <div class="waiting-pulse">
+        <div class="waiting-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <strong>Buscando mentor disponible…</strong>
+          <div style="font-size:.85rem;color:var(--primary)">Tiempo de espera estimado: <span id="wait-time">2–5 minutos</span></div>
+        </div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="cancelRequest()" aria-label="Cancelar búsqueda de mentor">
+        <i class="fa-solid fa-xmark"></i> Cancelar búsqueda
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Secciones de mentoría">
+      <button class="tab-btn" role="tab" aria-selected="true" aria-controls="tab-find" id="btn-find" onclick="switchTab('find')">
+        <i class="fa-solid fa-magnifying-glass"></i> Buscar mentor
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-history" id="btn-history" onclick="switchTab('history')">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historial
+      </button>
+    </div>
+
+    <!-- Tab: Buscar mentor -->
+    <div id="tab-find" class="tab-panel active" role="tabpanel" aria-labelledby="btn-find">
+
+      <!-- Solicitar mentor -->
+      <div class="card" style="margin-bottom:1.5rem">
+        <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem">
+          Solicitar mentoría en tiempo real
+        </h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group" style="margin:0">
+            <label for="req-lang">Lenguaje de ayuda</label>
+            <select id="req-lang" aria-label="Seleccionar lenguaje para el emparejamiento" onchange="filterMentors()">
+              <option value="">Todos los lenguajes</option>
+              <option value="Python">Python</option>
+              <option value="JavaScript">JavaScript</option>
+              <option value="TypeScript">TypeScript</option>
+              <option value="React">React</option>
+              <option value="Node.js">Node.js</option>
+              <option value="SQL">SQL</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label for="req-problem">Describe tu duda</label>
+            <input type="text" id="req-problem" placeholder="Ej: No entiendo la recursión en Python">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="request-btn" onclick="requestMentor()">
+          <i class="fa-solid fa-headset" aria-hidden="true"></i> Solicitar mentor ahora
+        </button>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-top:.5rem">El sistema te emparejará automáticamente con un mentor disponible en ese lenguaje.</p>
+      </div>
+
+      <!-- Filtros -->
+      <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem">
+        Directorio de mentores
+      </h2>
+      <div class="filter-bar" role="search" aria-label="Filtrar mentores por especialidad">
+        <select id="filter-lang" aria-label="Filtrar por lenguaje" onchange="filterMentors()" style="padding:.5rem .9rem;border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:.9rem">
+          <option value="">Todos los lenguajes</option>
+          <option value="Python">Python</option>
+          <option value="JavaScript">JavaScript</option>
+          <option value="TypeScript">TypeScript</option>
+          <option value="React">React</option>
+          <option value="Node.js">Node.js</option>
+          <option value="SQL">SQL</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem">
+          <input type="checkbox" id="filter-available" onchange="filterMentors()" aria-label="Solo mentores disponibles">
+          Solo disponibles
+        </label>
+        <span id="mentor-count" aria-live="polite" style="font-size:.85rem;color:var(--text-muted)"></span>
+      </div>
+      <div class="mentor-grid" id="mentor-grid" role="list" aria-label="Lista de mentores disponibles">
+        <p style="color:var(--text-muted)">Cargando mentores...</p>
+      </div>
+    </div>
+
+    <!-- Tab: Historial -->
+    <div id="tab-history" class="tab-panel" role="tabpanel" aria-labelledby="btn-history">
+      <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem">
+        Historial de tutorías recibidas
+      </h2>
+      <div id="history-list"></div>
+    </div>
+
+  </main>
+
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireStudent();
+    let currentRating = 0;
+
+    function switchTab(tab) {
+      ['find', 'history'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('btn-' + t).setAttribute('aria-selected', t === tab);
+      });
+      if (tab === 'history') renderHistory();
+      TTS.speak(tab === 'find' ? 'Sección buscar mentor' : 'Sección historial de tutorías');
+    }
+
+    function renderMentors(mentors) {
+      const grid = document.getElementById('mentor-grid');
+      document.getElementById('mentor-count').textContent = mentors.length + ' mentor(es) encontrado(s)';
+      if (mentors.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mentores disponibles con ese filtro.</p>';
+        TTS.speak('Sin mentores disponibles con ese filtro.');
+        return;
+      }
+      grid.innerHTML = mentors.map(m => `
+ <div class="mentor-card" role="listitem" aria-label="Mentor ${m.name}, ${m.available ? 'disponible' : 'ocupado'}, calificación ${m.rating}">
+ <div class="mentor-info">
+ <div class="mentor-avatar" aria-hidden="true">${m.name.split(' ').map(w=>w[0]).join('').substring(0,2)}</div>
+ <div>
+ <strong>${m.name}</strong>
+ <div style="font-size:.82rem;color:var(--text-muted)">${m.sessions} sesiones completadas</div>
+ </div>
+ <span class="badge ${m.available?'badge-success':'badge-error'}" style="margin-left:auto">
+ ${m.available ? '● Disponible' : '○ Ocupado'}
+ </span>
+ </div>
+ <div class="lang-tags" aria-label="Lenguajes: ${m.langs.join(', ')}">
+ ${m.langs.map(l=>`<span class="badge badge-primary">${l}</span>`).join('')}
+ </div>
+ <div style="display:flex;align-items:center;justify-content:space-between">
+ <span class="stars-display" aria-label="Calificación ${m.rating}">
+ ${'★'.repeat(Math.floor(m.rating))}${'☆'.repeat(5-Math.floor(m.rating))}
+ <span style="font-size:.82rem;color:var(--text-muted)">${m.rating}</span>
+ </span>
+ ${m.available ? `<button class="btn btn-primary btn-sm" onclick="requestSpecific('${m.id}','${m.langs[0]}')" aria-label="Solicitar sesión con ${m.name}">
+ <i class="fa-solid fa-headset" aria-hidden="true"></i> Solicitar
+ </button>` : `<span class="badge badge-warning">No disponible</span>`}
+ </div>
+ </div>`).join('');
+    }
+
+    function filterMentors() {
+      const lang = document.getElementById('filter-lang').value || document.getElementById('req-lang').value;
+      const onlyAvail = document.getElementById('filter-available').checked;
+      let mentors = DB.get('mentors') || [];
+      if (lang) mentors = mentors.filter(m => m.langs.includes(lang));
+      if (onlyAvail) mentors = mentors.filter(m => m.available);
+      renderMentors(mentors);
+    }
+
+    function requestMentor() {
+      const lang = document.getElementById('req-lang').value;
+      const problem = document.getElementById('req-problem').value.trim();
+      if (!problem) {
+        TTS.speak('Describe brevemente tu duda antes de solicitar.');
+        toast('Escribe tu duda primero.', 'warning');
+        return;
+      }
+      const req = Mentoring.requestMentor(user.id, lang, problem);
+      showWaiting();
+      TTS.speak('Solicitud enviada. Buscando mentor' + (lang ? ' en ' + lang : '') + '. Espera en la cola.');
+      TTS.playEarcon('notify');
+      toast('Solicitud enviada. Buscando mentor…', 'info');
+      // Simulate auto-match after 5s
+      setTimeout(() => {
+        const available = Mentoring.getAvailableMentors(lang);
+        if (available.length > 0) {
+          const mentor = available[0];
+          const accepted = Mentoring.acceptRequest(req.id, mentor.id);
+          hideWaiting();
+          TTS.speak('¡Mentor encontrado! ' + mentor.name + ' ha aceptado tu solicitud. Entrando a la sala colaborativa.', true);
+          TTS.playEarcon('success');
+          toast('Mentor encontrado: ' + mentor.name, 'success', 4000);
+          setTimeout(() => {
+            window.location.href = '../session/index.html';
+          }, 1500);
+        }
+      }, 5000);
+    }
+
+    function requestSpecific(mentorId, lang) {
+      const problem = document.getElementById('req-problem').value.trim() || 'Ayuda general con ' + lang;
+      const req = Mentoring.requestMentor(user.id, lang, problem);
+      const accepted = Mentoring.acceptRequest(req.id, mentorId);
+      const mentor = (DB.get('mentors') || []).find(m => m.id === mentorId);
+      TTS.speak('Conectando con ' + (mentor?.name || 'el mentor') + '. Entrando a la sala colaborativa.', true);
+      TTS.playEarcon('success');
+      toast('Conectando con ' + (mentor?.name || 'el mentor') + '…', 'success');
+      setTimeout(() => {
+        window.location.href = '../session/index.html';
+      }, 1200);
+    }
+
+    function cancelRequest() {
+      Mentoring.cancelRequest(user.id);
+      hideWaiting();
+      TTS.speak('Búsqueda cancelada. Has salido de la cola de espera.', true);
+      TTS.announce('Búsqueda cancelada');
+      toast('Búsqueda cancelada.', 'info');
+    }
+
+    function showWaiting() {
+      document.getElementById('waiting-banner').style.display = 'flex';
+      document.getElementById('request-btn').disabled = true;
+    }
+
+    function hideWaiting() {
+      document.getElementById('waiting-banner').style.display = 'none';
+      document.getElementById('request-btn').disabled = false;
+    }
+
+    function renderHistory() {
+      const hist = (DB.get('history') || []).filter(h => h.studentId === user.id);
+      const el = document.getElementById('history-list');
+      if (hist.length === 0) {
+        el.innerHTML = '<div class="history-empty"><i class="fa-solid fa-inbox" style="font-size:2rem;margin-bottom:.5rem"></i><p>Aún no tienes tutorías registradas.</p></div>';
+        return;
+      }
+      el.innerHTML = `<div style="overflow-x:auto"><table aria-label="Historial de tutorías">
+ <thead><tr><th>Mentor</th><th>Tema</th><th>Fecha</th><th>Duración</th><th>Calificación</th><th>Acciones</th></tr></thead>
+ <tbody>${[...hist].reverse().map(h => `<tr>
+ <td><strong>${h.mentorName}</strong></td>
+ <td>${h.topic}</td>
+ <td>${h.date}</td>
+ <td>${h.duration} min</td>
+ <td>${h.rating ? '<span class="stars-display">' + '★'.repeat(h.rating) + '</span>' : '<span style="color:var(--text-muted)">Sin calificar</span>'}</td>
+ <td style="display:flex;gap:.4rem;flex-wrap:wrap">
+ ${!h.rating ? `<button class="btn btn-outline btn-sm" onclick="openRating('${h.id}')" aria-label="Calificar tutoría con ${h.mentorName}"><i class="fa-solid fa-star"></i> Calificar</button>` : ''}
+ <button class="btn btn-ghost btn-sm" onclick="openReport('${h.mentorId}')" aria-label="Reportar problema con ${h.mentorName}"><i class="fa-solid fa-flag"></i> Reportar</button>
+ </td>
+ </tr>`).join('')}</tbody>
+ </table></div>`;
+    }
+
+    // Rating
+    function openRating(histId) {
+      document.getElementById('rating-history-id').value = histId;
+      currentRating = 0;
+      updateStars(0);
+      openModal('rating-modal');
+      TTS.speak('Calificar tutoría. Usa las teclas de flecha para seleccionar de 1 a 5 estrellas. Presiona Enter para confirmar.');
+    }
+
+    function setRating(val) {
+      currentRating = val;
+      updateStars(val);
+      TTS.speak(val + ' estrella' + (val > 1 ? 's' : '') + ' seleccionada' + (val > 1 ? 's' : ''));
+    }
+
+    function updateStars(val) {
+      document.querySelectorAll('.star-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i < val);
+        btn.style.color = i < val ? 'var(--accent)' : 'var(--border)';
+        btn.setAttribute('aria-pressed', i < val);
+      });
+    }
+
+    function submitRating() {
+      if (!currentRating) {
+        TTS.speak('Selecciona una calificación primero.');
+        return;
+      }
+      Mentoring.addRating(document.getElementById('rating-history-id').value, currentRating);
+      closeModal('rating-modal');
+      TTS.speak('Calificación de ' + currentRating + ' estrellas enviada. Gracias por tu valoración.', true);
+      TTS.playEarcon('success');
+      toast('Calificación enviada. ¡Gracias!', 'success');
+      renderHistory();
+    }
+
+    // Report
+    function openReport(mentorId) {
+      document.getElementById('report-mentor-id').value = mentorId;
+      document.getElementById('report-reason').value = '';
+      openModal('report-modal');
+      TTS.speak('Formulario de reporte. Tu identidad será protegida. Describe el problema.');
+    }
+
+    function submitReport() {
+      const reason = document.getElementById('report-reason').value.trim();
+      if (!reason) {
+        TTS.speak('Describe el problema antes de enviar.');
+        return;
+      }
+      Mentoring.addReport(document.getElementById('report-mentor-id').value, reason, user.id);
+      closeModal('report-modal');
+      TTS.speak('Reporte enviado de forma anónima. El equipo de administración revisará el caso.', true);
+      toast('Reporte enviado. Tu identidad está protegida.', 'success');
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      m.style.display = 'flex';
+      requestAnimationFrame(() => m.classList.add('open'));
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      m.classList.remove('open');
+      setTimeout(() => m.style.display = 'none', 200);
+    }
+
+    // Init
+    if (user) {
+      filterMentors();
+      const active = DB.get('activeSession');
+      if (active && active.studentId === user.id) showWaiting();
+      TTS.speak('Página de búsqueda de mentor. Usa el filtro de lenguaje para encontrar el mentor ideal. Presiona Tab para navegar.');
+    }
+  </script>
+</body>
+
+</html>

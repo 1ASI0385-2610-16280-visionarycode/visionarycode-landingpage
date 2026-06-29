@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Accesible — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/dracula.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; flex-direction: column; background: #FAFAFA; color: #212121; font-family: 'Roboto', sans-serif; }
+
+    /* Navbar sticky = 76px; editor-page toma el resto */
+    .editor-page { height: calc(100vh - 76px); display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Toolbar */
+    .editor-toolbar {
+      display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+      padding: .45rem .85rem; background: #fff;
+      border-bottom: 2px solid #005B60; flex-shrink: 0;
+    }
+    .lang-select {
+      padding: .28rem .6rem; border: 1px solid #e5e7eb; border-radius: 6px;
+      background: #F2F7F6; color: #212121; font-size: .83rem; cursor: pointer; height: 36px;
+    }
+    .tsep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 .05rem; flex-shrink: 0; }
+    .tb-btn {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: 0 .75rem; height: 36px; border-radius: 6px;
+      border: 1px solid transparent; font-size: .82rem; font-weight: 500;
+      cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .15s;
+    }
+    .tb-run  { background: #8CC63F; color: #fff; border-color: #6FA02E; }
+    .tb-run:hover { background: #6FA02E; }
+    .tb-run:disabled { opacity: .55; cursor: not-allowed; }
+    .tb-stop { background: #ef4444; color: #fff; border-color: #dc2626; display: none; }
+    .tb-stop.visible { display: inline-flex; }
+    .tb-ghost { background: transparent; color: #374151; border-color: #e5e7eb; }
+    .tb-ghost:hover { background: #F2F7F6; color: #005B60; }
+    .save-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .77rem; color: #8CC63F; margin-left: .2rem; }
+    .save-badge.pending { color: #9ca3af; }
+
+    /* Split */
+    .editor-split { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .editor-main  { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+
+    /* Editor wrap — CodeMirror se crea aquí directamente (sin textarea) */
+    #editor-wrap { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+    #editor-wrap .CodeMirror {
+      width: 100%; height: 100%;
+      font-family: 'Fira Code', 'Consolas', monospace !important;
+      font-size: 14px !important; line-height: 1.65 !important;
+    }
+    #editor-wrap .CodeMirror-scroll { padding-bottom: 20px; }
+
+    /* Status bar */
+    .status-bar {
+      display: flex; align-items: center; gap: 1.2rem;
+      padding: .18rem 1rem; background: #005B60; color: #fff;
+      font-family: 'Fira Code', monospace; font-size: .72rem;
+      height: 26px; flex-shrink: 0; user-select: none;
+    }
+    #st-msg { margin-left: auto; font-family: 'Roboto', sans-serif; }
+
+    /* Consola */
+    .console-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .2rem .85rem; background: #F2F7F6;
+      border-top: 1px solid #e5e7eb; height: 30px; flex-shrink: 0;
+    }
+    .console-hd span { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; }
+    .console-out {
+      height: 140px; background: #1e1e2e; color: #cdd6f4;
+      font-family: 'Fira Code', monospace; font-size: .8rem;
+      padding: .55rem .9rem; overflow-y: auto; flex-shrink: 0;
+    }
+    .cl { margin: .1rem 0; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+    .cl-info { color: #89b4fa; }
+    .cl-ok   { color: #a6e3a1; }
+    .cl-err  { color: #f38ba8; }
+    .cl-warn { color: #f9e2af; }
+
+    /* Panel lateral */
+    .editor-sidebar { width: 258px; flex-shrink: 0; border-left: 1px solid #e5e7eb; background: #fff; overflow-y: auto; }
+    .sp { padding: .8rem 1rem; border-bottom: 1px solid #e5e7eb; }
+    .sp-title { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; margin-bottom: .45rem; }
+    .sp-box { font-size: .77rem; color: #6b7280; font-family: 'Fira Code', monospace; background: #F2F7F6; padding: .36rem .6rem; border-radius: 6px; min-height: 26px; word-break: break-all; }
+    .sk { display: flex; justify-content: space-between; align-items: center; padding: .19rem 0; font-size: .77rem; color: #374151; }
+    .kbd { background: #F2F7F6; border: 1px solid #e5e7eb; border-radius: 4px; padding: .06rem .36rem; font-family: monospace; font-size: .69rem; }
+    .sp-btns { display: flex; gap: .38rem; margin-top: .48rem; flex-wrap: wrap; }
+    .sp-btn { display: inline-flex; align-items: center; gap: .28rem; padding: .24rem .6rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: .77rem; cursor: pointer; background: transparent; color: #374151; font-family: inherit; }
+    .sp-btn:hover { background: #E0F2F1; color: #005B60; }
+    .sp-btn-full { width: 100%; justify-content: center; margin-top: .42rem; }
+
+    /* Modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 900; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 12px; padding: 1.5rem; max-width: 450px; width: 94%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,91,96,.15); }
+    .modal-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .modal-title { font-size: .94rem; font-weight: 700; color: #005B60; }
+    .modal-close { border: none; background: none; cursor: pointer; font-size: 1rem; color: #6b7280; padding: .2rem .4rem; border-radius: 4px; }
+    .modal-close:hover { background: #F2F7F6; }
+
+    /* Accesibilidad */
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); }
+    .skip-link { position: absolute; top: -40px; left: 1rem; background: #005B60; color: #fff; padding: .5rem 1rem; border-radius: 0 0 6px 6px; font-size: .85rem; z-index: 999; text-decoration: none; }
+    .skip-link:focus { top: 0; }
+
+    /* Responsive */
+    @media (max-width: 768px) { .editor-sidebar { display: none; } }
+  </style>
+</head>
+<body>
+
+  <a href="#editor-wrap" class="skip-link">Saltar al editor</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Modal atajos (US-09) -->
+  <div id="modal-sc" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-sc-title">
+    <div class="modal-box">
+      <div class="modal-hd">
+        <h2 class="modal-title" id="modal-sc-title">
+          <i class="fa-solid fa-keyboard" aria-hidden="true"></i> Atajos de teclado
+        </h2>
+        <button class="modal-close" onclick="closeModal()" aria-label="Cerrar">&#10005;</button>
+      </div>
+      <p style="font-size:.79rem;color:#6b7280;margin-bottom:.8rem">Alt+H para escuchar la lista.</p>
+      <div class="sk"><span>Ejecutar c&oacute;digo</span><kbd class="kbd">Ctrl+Enter</kbd></div>
+      <div class="sk"><span>Detener ejecuci&oacute;n</span><kbd class="kbd">Ctrl+Shift+S</kbd></div>
+      <div class="sk"><span>Leer l&iacute;nea actual</span><kbd class="kbd">Alt+L</kbd></div>
+      <div class="sk"><span>Anunciar posici&oacute;n</span><kbd class="kbd">Alt+N</kbd></div>
+      <div class="sk"><span>Saltar bloque abajo</span><kbd class="kbd">Alt+&#8595;</kbd></div>
+      <div class="sk"><span>Saltar bloque arriba</span><kbd class="kbd">Alt+&#8593;</kbd></div>
+      <div class="sk"><span>Verificar sint&aacute;xis</span><kbd class="kbd">Alt+V</kbd></div>
+      <div class="sk"><span>Guardar</span><kbd class="kbd">Ctrl+S</kbd></div>
+      <div class="sk"><span>Autocompletar</span><kbd class="kbd">Ctrl+Espacio</kbd></div>
+      <div class="sk"><span>Ver atajos</span><kbd class="kbd">Alt+H</kbd></div>
+      <div class="sk"><span>Cancelar / cerrar</span><kbd class="kbd">Escape</kbd></div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo">
+        <img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img">
+        VisionaryCode
+      </a>
+      <nav aria-label="Navegaci&oacute;n principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html">Panel</a></li>
+          <li><a href="editor.html" class="active" aria-current="page">Editor</a></li>
+          <li><a href="mentoring.html">Mentores</a></li>
+          <li><a href="progress.html">Progreso</a></li>
+          <li><a href="settings.html">Configuraci&oacute;n</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <!-- Pagina del editor -->
+  <div class="editor-page">
+
+    <!-- Toolbar (US-01, US-04, US-08..US-13, US-15) -->
+    <div class="editor-toolbar" role="toolbar" aria-label="Herramientas del editor">
+      <select class="lang-select" id="lang-sel" aria-label="Lenguaje de programacion" onchange="changeLang(this.value)">
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+        <option value="htmlmixed">HTML</option>
+        <option value="css">CSS</option>
+        <option value="sql">SQL</option>
+      </select>
+
+      <div class="tsep" aria-hidden="true"></div>
+
+      <button class="tb-btn tb-run" id="btn-run" onclick="runCode()" aria-label="Ejecutar codigo (Ctrl+Enter)">
+        <i class="fa-solid fa-play" aria-hidden="true"></i> Ejecutar
+      </button>
+      <button class="tb-btn tb-stop" id="btn-stop" onclick="stopRun()" aria-label="Detener ejecucion">
+        <i class="fa-solid fa-stop" aria-hidden="true"></i> Detener
+      </button>
+
+      <div class="tsep" aria-hidden="true"></div>
+
+      <button class="tb-btn tb-ghost" onclick="checkSyntax()" aria-label="Verificar sintaxis (Alt+V)">
+        <i class="fa-solid fa-spell-check" aria-hidden="true"></i> Sintaxis
+      </button>
+      <button class="tb-btn tb-ghost" onclick="saveCode()" aria-label="Guardar codigo (Ctrl+S)">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
+      </button>
+      <button class="tb-btn tb-ghost" onclick="resetCode()" aria-label="Restablecer codigo de ejemplo">
+        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Resetear
+      </button>
+      <button class="tb-btn tb-ghost" onclick="openModal()" aria-label="Ver atajos de teclado (Alt+H)">
+        <i class="fa-solid fa-keyboard" aria-hidden="true"></i> Atajos
+      </button>
+
+      <div class="tsep" aria-hidden="true"></div>
+
+      <span class="save-badge" id="save-badge" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span id="save-txt">Guardado</span>
+      </span>
+    </div>
+
+    <!-- Split editor / panel -->
+    <div class="editor-split">
+
+      <!-- Columna principal -->
+      <div class="editor-main">
+
+        <!-- US-01: Editor CodeMirror (div, sin textarea) -->
+        <div id="editor-wrap" tabindex="-1" aria-label="Editor de codigo accesible"></div>
+
+        <!-- US-11: Status bar -->
+        <div class="status-bar" role="status" aria-live="polite">
+          <span>Ln <strong id="st-ln">1</strong></span>
+          <span>Col <strong id="st-col">1</strong></span>
+          <span>Nivel <strong id="st-lv">0</strong></span>
+          <span id="st-msg"></span>
+        </div>
+
+        <!-- US-14: Consola -->
+        <div class="console-hd">
+          <span>Consola de resultados</span>
+          <button class="sp-btn" onclick="clearConsole()" aria-label="Limpiar consola">
+            <i class="fa-solid fa-trash" aria-hidden="true"></i> Limpiar
+          </button>
+        </div>
+        <div class="console-out" id="console-out" role="log" aria-live="polite" tabindex="0">
+          <div class="cl cl-info">&#9658; Editor listo. Ctrl+Enter para ejecutar.</div>
+        </div>
+
+      </div>
+
+      <!-- Panel lateral -->
+      <aside class="editor-sidebar" aria-label="Panel lateral">
+
+        <!-- US-02, US-03 -->
+        <div class="sp">
+          <div class="sp-title">Lector de c&oacute;digo</div>
+          <div class="sp-box" id="line-box" aria-live="polite">Mueve el cursor para ver la l&iacute;nea.</div>
+          <div class="sp-btns">
+            <button class="sp-btn" onclick="readLine()" aria-label="Leer linea actual (Alt+L)">
+              <i class="fa-solid fa-headphones" aria-hidden="true"></i> Leer
+            </button>
+            <button class="sp-btn" onclick="announcePos()" aria-label="Anunciar posicion (Alt+N)">
+              <i class="fa-solid fa-hashtag" aria-hidden="true"></i> Pos
+            </button>
+          </div>
+        </div>
+
+        <!-- US-07 -->
+        <div class="sp">
+          <div class="sp-title">Autocompletado</div>
+          <div class="sp-box" id="ac-preview" aria-live="polite">Ctrl+Espacio para sugerencias.</div>
+        </div>
+
+        <!-- US-06, US-08 -->
+        <div class="sp">
+          <div class="sp-title">Errores detectados</div>
+          <div id="err-panel" role="region" aria-live="polite">
+            <p style="font-size:.78rem;color:#6b7280">Sin errores &#x2713;</p>
+          </div>
+        </div>
+
+        <!-- US-09 -->
+        <div class="sp">
+          <div class="sp-title">Atajos r&aacute;pidos</div>
+          <div class="sk"><span>Ejecutar</span><kbd class="kbd">Ctrl+&#8629;</kbd></div>
+          <div class="sk"><span>Leer l&iacute;nea</span><kbd class="kbd">Alt+L</kbd></div>
+          <div class="sk"><span>Posici&oacute;n</span><kbd class="kbd">Alt+N</kbd></div>
+          <div class="sk"><span>Bloque &#8593;&#8595;</span><kbd class="kbd">Alt+&#8593;&#8595;</kbd></div>
+          <div class="sk"><span>Sintaxis</span><kbd class="kbd">Alt+V</kbd></div>
+          <div class="sk"><span>Guardar</span><kbd class="kbd">Ctrl+S</kbd></div>
+          <button class="sp-btn sp-btn-full" onclick="openModal()">Ver todos los atajos</button>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <!-- CodeMirror desde jsDelivr (CDN mas estable) -->
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/sql/sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/edit/matchbrackets.min.js"></script>
+
+  <!-- App compartida y logica del editor (JS externo = sin problemas de parsing HTML) -->
+  <script src="../assets/scripts/app.js"></script>
+  <script src="editor-init.js"></script>
+
+</body>
+</html>

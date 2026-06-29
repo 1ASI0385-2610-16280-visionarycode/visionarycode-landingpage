@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sesión Colaborativa — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    /* Session header */
+    .session-header {
+      background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+      color: #cdd6f4;
+      padding: .75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .session-header.logo {
+      color: #4DB6AC;
+      font-weight: 800;
+    }
+
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(255, 255, 255, .1);
+      border-radius: 99px;
+      padding: .25rem .75rem;
+      font-size: .82rem;
+    }
+
+    .user-chip.dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .cursor-label {
+      font-size: .75rem;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .cursor-student {
+      background: #89b4fa;
+      color: #1e1e2e;
+    }
+
+    .cursor-mentor {
+      background: #f38ba8;
+      color: #1e1e2e;
+    }
+
+    /* Layout */
+    .collab-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media(max-width:900px) {
+      .collab-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Editor area */
+    .collab-editor-wrap {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .editor-topbar {
+      background: #2a2a3e;
+      padding: .5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #3a3a5e;
+    }
+
+    .editor-topbar span {
+      color: #6c7086;
+      font-size: .8rem;
+    }
+
+    .CodeMirror {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      height: calc(100vh - 300px);
+      min-height: 260px;
+    }
+
+    /* Cursor tracker */
+    #cursor-tracker {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10;
+      transition: top.3s, left.3s;
+    }
+
+    .cursor-flag {
+      background: #f38ba8;
+      color: #1e1e2e;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .15rem .45rem;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    /* Console */
+    .collab-console {
+      background: #1e1e2e;
+      padding: .75rem 1rem;
+      min-height: 80px;
+      max-height: 140px;
+      overflow-y: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: .8rem;
+      color: #cdd6f4;
+      border-top: 1px solid #3a3a5e;
+    }
+
+    .cl {
+      margin: .1rem 0;
+    }
+
+    .cl.s {
+      color: #a6e3a1;
+    }
+
+    .cl.e {
+      color: #f38ba8;
+    }
+
+    .cl.i {
+      color: #89b4fa;
+    }
+
+    .cl.m {
+      color: #f9e2af;
+    }
+
+    /* Right panel */
+    .collab-panel {
+      background: #1e1e2e;
+      border-left: 1px solid #3a3a5e;
+      display: flex;
+      flex-direction: column;
+      color: #cdd6f4;
+    }
+
+    .panel-tab-bar {
+      display: flex;
+      border-bottom: 1px solid #3a3a5e;
+    }
+
+    .panel-tab {
+      flex: 1;
+      padding: .6rem .5rem;
+      background: transparent;
+      border: none;
+      color: #6c7086;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color.2s;
+    }
+
+    .panel-tab.active {
+      color: #4DB6AC;
+      border-bottom: 2px solid #4DB6AC;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: .85rem;
+    }
+
+    /* Voice chat */
+    .voice-section {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .voice-user {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem .85rem;
+      background: rgba(255, 255, 255, .05);
+      border-radius: var(--radius-sm);
+    }
+
+    .voice-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: .85rem;
+    }
+
+    .speaking {
+      box-shadow: 0 0 0 3px #a6e3a1;
+      animation: pulse 1s infinite;
+    }
+
+    .mic-btn {
+      margin-left: auto;
+      background: rgba(255, 255, 255, .1);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: #cdd6f4;
+      transition: background.2s;
+    }
+
+    .mic-btn.muted {
+      background: #f38ba8;
+      color: #1e1e2e;
+    }
+
+    .mic-btn:hover {
+      background: rgba(255, 255, 255, .2);
+    }
+
+    /* Chat */
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      margin-bottom: .75rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .chat-msg {
+      padding: .5rem .75rem;
+      border-radius: var(--radius-sm);
+      font-size: .82rem;
+      max-width: 90%;
+      word-break: break-word;
+    }
+
+    .chat-msg.sent {
+      background: #005B60;
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .chat-msg.recv {
+      background: rgba(255, 255, 255, .1);
+      align-self: flex-start;
+    }
+
+    .chat-msg.mentor-comment {
+      background: #f9e2af;
+      color: #1e1e2e;
+      border-left: 3px solid #f59e0b;
+    }
+
+    .chat-msg.sender {
+      font-size: .7rem;
+      font-weight: 700;
+      margin-bottom: .2rem;
+      opacity: .75;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: .5rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid #3a3a5e;
+      border-radius: var(--radius-sm);
+      padding: .5rem .75rem;
+      color: #cdd6f4;
+      font-size: .85rem;
+      font-family: inherit;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: #4DB6AC;
+    }
+
+    .chat-send {
+      background: #005B60;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      padding: .5rem .75rem;
+      cursor: pointer;
+    }
+
+    /* Mentor comments area */
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
+    .comment-item {
+      background: rgba(249, 226, 175, .1);
+      border-left: 3px solid #f9e2af;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: .5rem .75rem;
+      font-size: .82rem;
+    }
+
+    .comment-item.c-line {
+      color: #f9e2af;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    /* Bottom bar */
+    .session-footer {
+      background: #1a1a2e;
+      border-top: 1px solid #3a3a5e;
+      padding: .6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    .session-timer {
+      font-family: monospace;
+      font-size: .9rem;
+      color: #4DB6AC;
+      font-weight: 700;
+    }
+
+    .readonly-badge {
+      background: #f38ba8;
+      color: #1e1e2e;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+    }
+
+    .connected-badge {
+      background: #a6e3a1;
+      color: #1e1e2e;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+      animation: none;
+    }
+
+    .disconnected-badge {
+      background: #f38ba8;
+      color: #1e1e2e;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#collab-editor" class="skip-link">Saltar al editor colaborativo</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- End session modal -->
+  <div id="end-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="end-title" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="end-title">Finalizar sesión</h2>
+      </div>
+      <p style="margin-bottom:1.25rem;color:var(--text-muted)">¿Estás seguro de que deseas finalizar la sesión colaborativa? Los cambios quedarán guardados en el archivo del estudiante.</p>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeEndModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmEndSession()">
+          <i class="fa-solid fa-flag-checkered"></i> Finalizar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session header -->
+  <header class="session-header" role="banner">
+    <span class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</span>
+    <div class="session-info" aria-label="Información de la sesión">
+      <div class="user-chip" id="chip-student" aria-label="Estudiante conectado">
+        <div class="dot" aria-hidden="true"></div>
+        <span id="student-chip-name">Estudiante</span>
+        <span class="cursor-label cursor-student" aria-hidden="true">alumno</span>
+      </div>
+      <div class="user-chip" id="chip-mentor" aria-label="Mentor conectado">
+        <div class="dot" style="background:#4DB6AC" aria-hidden="true"></div>
+        <span id="mentor-chip-name">Mentor</span>
+        <span class="cursor-label cursor-mentor" aria-hidden="true">mentor</span>
+      </div>
+      <span id="session-status" class="connected-badge" role="status" aria-live="polite">Conectado</span>
+      <span id="lang-badge" class="badge badge-primary"></span>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="openEndModal()" style="margin-left:auto" aria-label="Finalizar sesión colaborativa">
+      <i class="fa-solid fa-flag-checkered"></i> Finalizar
+    </button>
+  </header>
+
+  <div class="collab-layout" style="flex:1">
+
+    <!-- Editor colaborativo -->
+    <div class="collab-editor-wrap" id="collab-editor" tabindex="-1">
+      <div class="editor-topbar">
+        <span id="file-label">sesion_colaborativa.py</span>
+        <!-- Cursor indicator -->
+        <span id="cursor-position" aria-live="polite" style="color:#4DB6AC"></span>
+        <!-- Read-only toggle -->
+        <button class="btn btn-sm" id="readonly-btn" onclick="toggleReadOnly()" style="background:rgba(255,255,255,.1);color:#cdd6f4;border-color:rgba(255,255,255,.2)" aria-label="Ceder control del teclado al estudiante">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Modo edición
+        </button>
+        <button class="btn btn-sm" onclick="runCollabCode()" style="background:#005B60;color:#fff;border-color:#005B60" aria-label="Ejecutar código (Ctrl+Enter)">
+          <i class="fa-solid fa-play" aria-hidden="true"></i> Ejecutar
+        </button>
+      </div>
+
+      <!-- Cursor tracker -->
+      <div id="cursor-tracker" aria-hidden="true" style="display:none">
+        <div class="cursor-flag" id="cursor-flag">mentor</div>
+      </div>
+
+      <textarea id="collab-code" aria-label="Editor de código colaborativo. Los cambios del mentor aparecen en tiempo real."></textarea>
+
+      <!-- Console -->
+      <div>
+        <div style="background:#2a2a3e;padding:.35rem 1rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.75rem;color:#6c7086;font-weight:700">CONSOLA</span>
+          <button style="background:none;border:none;color:#6c7086;font-size:.75rem;cursor:pointer" onclick="clearCollab()">Limpiar</button>
+        </div>
+        <div class="collab-console" id="collab-console" role="log" aria-label="Consola de resultados" aria-live="polite" tabindex="0">
+          <div class="cl i">▶ Sesión colaborativa iniciada. Código sincronizado.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <aside class="collab-panel" aria-label="Panel colaborativo">
+      <div class="panel-tab-bar" role="tablist" aria-label="Pestañas del panel">
+        <button class="panel-tab active" role="tab" aria-selected="true" id="ptab-voice" onclick="switchPanel('voice')" aria-controls="ppanel-voice">
+          <i class="fa-solid fa-microphone" aria-hidden="true"></i> Voz
+        </button>
+        <button class="panel-tab" role="tab" aria-selected="false" id="ptab-chat" onclick="switchPanel('chat')" aria-controls="ppanel-chat">
+          <i class="fa-solid fa-message" aria-hidden="true"></i> Chat
+        </button>
+        <button class="panel-tab" role="tab" aria-selected="false" id="ptab-comments" onclick="switchPanel('comments')" aria-controls="ppanel-comments">
+          <i class="fa-solid fa-comment-code" aria-hidden="true"></i> Notas
+        </button>
+      </div>
+
+      <!-- Voice panel -->
+      <div class="panel-body" id="ppanel-voice" role="tabpanel" aria-labelledby="ptab-voice">
+        <div class="voice-section">
+          <p style="font-size:.78rem;color:#6c7086;margin-bottom:.25rem">Chat de voz integrado. Sin Zoom ni Meet.</p>
+          <div id="voice-status" class="voice-indicator" style="background:rgba(166,227,161,.15);color:#a6e3a1;margin-bottom:.5rem" aria-live="polite">
+            <div class="pulse" aria-hidden="true"></div>
+            <span id="voice-status-text">Canal de voz activo</span>
+          </div>
+          <div class="voice-user" id="vu-student">
+            <div class="voice-avatar" style="background:#89b4fa;color:#1e1e2e" id="va-student" aria-hidden="true">ES</div>
+            <div>
+              <strong id="vn-student" style="font-size:.88rem">Estudiante</strong>
+              <div style="font-size:.75rem;color:#6c7086" id="vs-student">Conectado</div>
+            </div>
+            <button class="mic-btn" id="mic-student" onclick="toggleMic('student')" aria-label="Silenciar micrófono del estudiante">
+              <i class="fa-solid fa-microphone" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="voice-user" id="vu-mentor">
+            <div class="voice-avatar" style="background:#4DB6AC;color:#1e1e2e" id="va-mentor" aria-hidden="true">ME</div>
+            <div>
+              <strong id="vn-mentor" style="font-size:.88rem">Mentor</strong>
+              <div style="font-size:.75rem;color:#6c7086" id="vs-mentor">Conectado</div>
+            </div>
+            <button class="mic-btn" id="mic-mentor" onclick="toggleMic('mentor')" aria-label="Silenciar micrófono del mentor">
+              <i class="fa-solid fa-microphone" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div id="mic-permission-note" class="alert alert-info" style="font-size:.78rem;margin-top:.5rem;display:none">
+            <i class="fa-solid fa-info-circle"></i> El navegador solicitó permisos de micrófono para el canal de voz.
+          </div>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:#cdd6f4;border:none;margin-top:.5rem" onclick="requestMicPermission()">
+            <i class="fa-solid fa-microphone-lines"></i> Conectar micrófono
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat panel -->
+      <div class="panel-body" id="ppanel-chat" role="tabpanel" aria-labelledby="ptab-chat" style="display:none">
+        <p style="font-size:.78rem;color:#6c7086;margin-bottom:.5rem">Comparte fragmentos o enlaces de documentación.</p>
+        <div class="chat-messages" id="chat-messages" aria-label="Mensajes del chat" aria-live="polite"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Escribe un mensaje o fragmento…" aria-label="Campo de mensaje de chat" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" onclick="sendChat()" aria-label="Enviar mensaje">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#cdd6f4;border:none;font-size:.75rem" onclick="sendQuickLink('https://docs.python.org/es/3/')">🔗 Python Docs</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#cdd6f4;border:none;font-size:.75rem" onclick="sendQuickLink('https://developer.mozilla.org/es/')">🔗 MDN</button>
+        </div>
+      </div>
+
+      <!-- Comments / Mentor notes panel -->
+      <div class="panel-body" id="ppanel-comments" role="tabpanel" aria-labelledby="ptab-comments" style="display:none">
+        <p style="font-size:.78rem;color:#6c7086;margin-bottom:.75rem">Notas del mentor leídas en voz alta para el alumno.</p>
+        <div class="comment-list" id="comment-list" aria-label="Comentarios del mentor" aria-live="polite"></div>
+        <div style="margin-top:.75rem">
+          <label for="mentor-note" style="font-size:.8rem;color:#6c7086;display:block;margin-bottom:.3rem">Añadir comentario en línea:</label>
+          <div style="display:flex;gap:.5rem;margin-bottom:.4rem">
+            <input type="number" id="note-line" min="1" value="1" style="width:70px;background:rgba(255,255,255,.08);border:1px solid #3a3a5e;border-radius:4px;padding:.3rem .5rem;color:#cdd6f4;font-size:.82rem" aria-label="Número de línea">
+            <span style="color:#6c7086;font-size:.82rem;align-self:center">línea</span>
+          </div>
+          <textarea id="mentor-note" rows="2" placeholder="Escribe una nota para el alumno…" style="width:100%;background:rgba(255,255,255,.08);border:1px solid #3a3a5e;border-radius:4px;padding:.4rem .6rem;color:#cdd6f4;font-size:.82rem;font-family:inherit;resize:vertical" aria-label="Texto del comentario para el alumno"></textarea>
+          <button class="btn btn-sm" onclick="addMentorComment()" style="margin-top:.4rem;background:#f9e2af;color:#1e1e2e;border:none;width:100%;font-weight:700">
+            <i class="fa-solid fa-comment-dots"></i> Publicar nota (alumno escuchará)
+          </button>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Session footer -->
+  <div class="session-footer" role="contentinfo" aria-label="Barra de estado de la sesión">
+    <span class="session-timer" id="session-timer" aria-label="Tiempo de sesión" aria-live="polite">00:00</span>
+    <span id="readonly-indicator" style="display:none" class="readonly-badge" aria-live="polite">
+      <i class="fa-solid fa-lock" aria-hidden="true"></i> Solo observando
+    </span>
+    <span id="sync-status" style="font-size:.78rem;color:#6c7086" aria-live="polite">
+      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Sincronizado
+    </span>
+    <span style="font-size:.78rem;color:#6c7086" id="cursor-pos-footer" aria-live="polite"></span>
+    <div style="margin-left:auto;display:flex;gap:.5rem">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:#cdd6f4;border:none" onclick="saveCollabCode()" aria-label="Guardar código de la sesión">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="openEndModal()" aria-label="Finalizar sesión">
+        <i class="fa-solid fa-flag-checkered"></i> Finalizar
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const currentUser = Auth.current();
+    if (!currentUser) window.location.href = '../auth/login.html';
+
+    const session = DB.get('activeSession');
+    const isStudent = currentUser?.role === 'student';
+    const isMentor = currentUser?.role === 'mentor';
+
+    // Resolve mentor & student names
+    const mentors = DB.get('mentors') || [];
+    const students = DB.get('students') || [];
+    let mentorUser = mentors.find(m => m.id === session?.mentorId) || {
+      name: 'Mentor Demo',
+      id: 'm1'
+    };
+    let studentUser = students.find(s => s.id === session?.studentId) || {
+      name: 'Estudiante Demo',
+      id: 's1'
+    };
+
+    // Set header chips
+    document.getElementById('student-chip-name').textContent = studentUser.name.split(' ')[0];
+    document.getElementById('mentor-chip-name').textContent = mentorUser.name.split(' ')[0];
+    document.getElementById('lang-badge').textContent = session?.lang || 'Python';
+
+    // Voice UI names
+    const sInit = studentUser.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    const mInit = mentorUser.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('va-student').textContent = sInit;
+    document.getElementById('va-mentor').textContent = mInit;
+    document.getElementById('vn-student').textContent = studentUser.name.split(' ')[0];
+    document.getElementById('vn-mentor').textContent = mentorUser.name.split(' ')[0];
+
+    // Init CodeMirror
+    const savedCode = DB.get('savedCode_python') || `# Sesión colaborativa — VisionaryCode\n# Los cambios aparecen en tiempo real\n\ndef calcular_promedio(lista):\n    if not lista:\n        return 0\n    suma = sum(lista)\n    return suma / len(lista)\n\nnotas = [85, 92, 78, 95, 88]\npromedio = calcular_promedio(notas)\nprint(f"Promedio: {promedio:.1f}")\n`;
+
+    const editor = CodeMirror.fromTextArea(document.getElementById('collab-code'), {
+      mode: 'python',
+      theme: 'dracula',
+      lineNumbers: true,
+      autoCloseBrackets: true,
+      tabSize: 4,
+      readOnly: false,
+      extraKeys: {
+        'Ctrl-Enter': () => runCollabCode(),
+        'Ctrl-S': () => {
+          saveCollabCode();
+          return false;
+        }
+      },
+    });
+    editor.setValue(savedCode);
+
+    // Cursor tracking
+    editor.on('cursorActivity', () => {
+      const cur = editor.getCursor();
+      const posText = `Línea ${cur.line+1}, Col ${cur.ch+1}`;
+      document.getElementById('cursor-position').textContent = posText;
+      document.getElementById('cursor-pos-footer').textContent = posText;
+      // Simulate mentor cursor label following
+      if (isStudent) simulateMentorCursor();
+    });
+
+    // Simulate real-time sync: mentor types and student sees changes
+    let syncTimer;
+    editor.on('change', () => {
+      clearTimeout(syncTimer);
+      document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> Sincronizando…';
+      syncTimer = setTimeout(() => {
+        DB.set('collabCode', editor.getValue());
+        document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Sincronizado';
+        // Simulate < 500ms sync
+      }, 450);
+    });
+
+    // Simulate mentor cursor appearing on student's screen
+    function simulateMentorCursor() {
+      const tracker = document.getElementById('cursor-tracker');
+      const flag = document.getElementById('cursor-flag');
+      if (!isMentor) {
+        // Student sees mentor's cursor
+        const cm = document.querySelector('.CodeMirror');
+        const coords = editor.charCoords({
+          line: Math.max(0, editor.getCursor().line - 1),
+          ch: 10
+        }, 'local');
+        tracker.style.display = 'block';
+        tracker.style.top = (coords.top + 2) + 'px';
+        tracker.style.left = (coords.left + 20) + 'px';
+        flag.textContent = mentorUser.name.split(' ')[0];
+      }
+    }
+
+    // Mentor comments read aloud
+    const mentorComments = [];
+
+    function addMentorComment() {
+      const text = document.getElementById('mentor-note').value.trim();
+      const line = parseInt(document.getElementById('note-line').value) || 1;
+      if (!text) {
+        TTS.speak('Escribe un comentario primero.');
+        return;
+      }
+      const comment = {
+        id: 'c' + Date.now(),
+        line,
+        text,
+        author: currentUser.name
+      };
+      mentorComments.push(comment);
+      document.getElementById('mentor-note').value = '';
+      renderComments();
+      // Read the comment aloud for student
+      TTS.speak(`Comentario del mentor en línea ${line}: ${text}`, true);
+      TTS.playEarcon('notify');
+      toast('Comentario publicado. El alumno lo escuchará.', 'success');
+      // Add to chat too
+      addChatMsg(currentUser.name.split(' ')[0], `[Línea ${line}] ${text}`, 'mentor-comment');
+    }
+
+    function renderComments() {
+      const list = document.getElementById('comment-list');
+      if (mentorComments.length === 0) {
+        list.innerHTML = '<p style="font-size:.82rem;color:#6c7086">Aún no hay comentarios del mentor.</p>';
+        return;
+      }
+      list.innerHTML = mentorComments.map(c => `
+ <div class="comment-item" role="article" aria-label="Comentario en línea ${c.line}: ${c.text}">
+ <div class="c-line">Línea ${c.line}</div>
+ <div style="margin-top:.3rem">${c.text}</div>
+ </div>`).join('');
+    }
+    renderComments();
+
+    // Read-only mode for mentor
+    let readOnly = false;
+
+    function toggleReadOnly() {
+      readOnly = !readOnly;
+      editor.setOption('readOnly', readOnly);
+      const btn = document.getElementById('readonly-btn');
+      const ind = document.getElementById('readonly-indicator');
+      if (readOnly) {
+        btn.innerHTML = '<i class="fa-solid fa-lock"></i> Solo observar';
+        btn.style.background = '#f38ba8';
+        btn.style.color = '#1e1e2e';
+        ind.style.display = 'inline-flex';
+        TTS.speak('Modo solo observar activado. El mentor ya no puede editar. El alumno tiene control total del teclado.');
+        toast('Modo "Solo observar" activado. El alumno tiene el control.', 'info');
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Modo edición';
+        btn.style.background = 'rgba(255,255,255,.1)';
+        btn.style.color = '#cdd6f4';
+        ind.style.display = 'none';
+        TTS.speak('Modo edición reactivado. El mentor puede editar nuevamente.');
+      }
+    }
+
+    // Simulate disconnection after 30s (demo)
+    let disconnectDemo = false;
+    setTimeout(() => {
+      if (!disconnectDemo) {
+        disconnectDemo = true;
+        document.getElementById('session-status').textContent = 'Reconectando…';
+        document.getElementById('session-status').className = 'disconnected-badge';
+        TTS.speak('El mentor se ha desconectado. Esperando reconexión.', true);
+        TTS.playEarcon('disconnect');
+        toast('El mentor se desconectó momentáneamente. Reconectando…', 'warning', 4000);
+        setTimeout(() => {
+          document.getElementById('session-status').textContent = 'Conectado';
+          document.getElementById('session-status').className = 'connected-badge';
+          TTS.speak('El mentor se ha reconectado.');
+          toast('Mentor reconectado ✓', 'success');
+        }, 4000);
+      }
+    }, 30000);
+
+    // Voice / mic
+    function requestMicPermission() {
+      if (navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          audio: true
+        }).then(stream => {
+          stream.getTracks().forEach(t => t.stop());
+          document.getElementById('mic-permission-note').style.display = 'flex';
+          TTS.speak('Canal de voz activado. Puedes hablar con el mentor directamente.');
+          document.getElementById('voice-status-text').textContent = 'Micrófono conectado ✓';
+          toast('Canal de voz activo ✓', 'success');
+        }).catch(() => {
+          TTS.speak('No se pudo acceder al micrófono. Verifica los permisos del navegador.');
+          toast('Permiso de micrófono denegado.', 'error');
+        });
+      } else {
+        TTS.speak('Tu navegador no soporta acceso al micrófono.');
+        toast('Navegador no compatible con audio.', 'warning');
+      }
+    }
+    let micMuted = {
+      student: false,
+      mentor: false
+    };
+
+    function toggleMic(who) {
+      micMuted[who] = !micMuted[who];
+      const btn = document.getElementById('mic-' + who);
+      const muted = micMuted[who];
+      btn.classList.toggle('muted', muted);
+      btn.innerHTML = `<i class="fa-solid fa-microphone${muted ? '-slash' : ''}" aria-hidden="true"></i>`;
+      btn.setAttribute('aria-label', (muted ? 'Activar' : 'Silenciar') + ' micrófono de ' + who);
+      TTS.speak((who === 'student' ? 'Estudiante' : 'Mentor') + (muted ? ' silenciado.' : ' activado.'));
+    }
+
+    // Chat
+    function addChatMsg(sender, text, type = 'recv') {
+      const msgs = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + type;
+      div.setAttribute('role', 'article');
+      div.setAttribute('aria-label', sender + ': ' + text);
+      div.innerHTML = `<div class="sender">${sender}</div><div>${text}</div>`;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      addChatMsg(currentUser.name.split(' ')[0], text, 'sent');
+      input.value = '';
+      TTS.announce('Mensaje enviado: ' + text);
+      // Simulate reply after 2s
+      setTimeout(() => {
+        const replies = [
+          'Entendido, revisa la línea 5.',
+          'Exacto, esa es la función correcta.',
+          'Prueba con un valor diferente.',
+          'Aquí te dejo el enlace de la documentación.',
+        ];
+        const reply = replies[Math.floor(Math.random() * replies.length)];
+        const otherName = isStudent ? mentorUser.name.split(' ')[0] : studentUser.name.split(' ')[0];
+        addChatMsg(otherName, reply, 'recv');
+        TTS.speak('Mensaje de ' + otherName + ': ' + reply);
+        TTS.playEarcon('notify');
+      }, 2000);
+    }
+
+    function sendQuickLink(url) {
+      document.getElementById('chat-input').value = url;
+      sendChat();
+    }
+
+    // Init chat with welcome message
+    addChatMsg('Sistema', 'Sesión iniciada. Chat de texto disponible para compartir fragmentos y enlaces.', 'recv');
+
+    // Panel tabs
+    function switchPanel(tab) {
+      ['voice', 'chat', 'comments'].forEach(t => {
+        document.getElementById('ppanel-' + t).style.display = t === tab ? 'flex' : 'none';
+        document.getElementById('ppanel-' + t).style.flexDirection = 'column';
+        document.getElementById('ptab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('ptab-' + t).setAttribute('aria-selected', t === tab);
+      });
+      document.getElementById('ppanel-' + tab).style.display = 'block';
+      TTS.speak(tab === 'voice' ? 'Panel de voz' : tab === 'chat' ? 'Panel de chat' : 'Panel de comentarios del mentor');
+    }
+
+    // Session timer
+    const startTime = session?.startTime ? new Date(session.startTime) : new Date();
+    const timerEl = document.getElementById('session-timer');
+    setInterval(() => {
+      const elapsed = Math.floor((new Date() - startTime) / 1000);
+      const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const s = (elapsed % 60).toString().padStart(2, '0');
+      timerEl.textContent = m + ':' + s;
+    }, 1000);
+
+    // Run code
+    function runCollabCode() {
+      clLog('▶ Ejecutando código…', 'i');
+      TTS.speak('Ejecutando código colaborativo.');
+      setTimeout(() => {
+        clLog('Promedio: 86.0', 's');
+        TTS.playEarcon('success');
+        TTS.speak('Código ejecutado exitosamente. Resultado en consola: Promedio 86 punto 0', true);
+      }, 800);
+    }
+
+    function clLog(msg, type = '') {
+      const c = document.getElementById('collab-console');
+      const d = document.createElement('div');
+      d.className = 'cl ' + type;
+      d.textContent = msg;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function clearCollab() {
+      document.getElementById('collab-console').innerHTML = '<div class="cl i">▶ Consola limpiada.</div>';
+    }
+
+    // Save on session end
+    function saveCollabCode() {
+      DB.set('savedCode_python', editor.getValue());
+      TTS.speak('Código guardado en tu archivo local.');
+      TTS.playEarcon('save');
+      toast('Código guardado ✓', 'success');
+    }
+
+    // End session modal
+    function openEndModal() {
+      const m = document.getElementById('end-modal');
+      m.style.display = 'flex';
+      requestAnimationFrame(() => m.classList.add('open'));
+      TTS.speak('¿Deseas finalizar la sesión? Presiona Finalizar para confirmar o Cancelar para continuar.');
+    }
+
+    function closeEndModal() {
+      const m = document.getElementById('end-modal');
+      m.classList.remove('open');
+      setTimeout(() => m.style.display = 'none', 200);
+    }
+
+    function confirmEndSession() {
+      // Save code first
+      saveCollabCode();
+      // Calculate duration
+      const durationSec = Math.floor((new Date() - startTime) / 1000);
+      Mentoring.endSession(session?.id, durationSec);
+      TTS.speak('Sesión finalizada. El código ha quedado guardado en tu archivo. Ambos regresan a sus paneles.', true);
+      TTS.playEarcon('success');
+      toast('Sesión finalizada. Código guardado automáticamente.', 'success', 4000);
+      setTimeout(() => {
+        if (isStudent) window.location.href = '../student/dashboard.html';
+        else window.location.href = '../mentor/dashboard.html';
+      }, 2000);
+    }
+
+    // Welcome TTS
+    setTimeout(() => {
+      TTS.speak('Entorno colaborativo iniciado. El código del alumno está sincronizado. Usa el panel de voz para comunicarte, el chat para compartir fragmentos, y las notas del mentor para comentar líneas de código. Presiona Control Enter para ejecutar.');
+    }, 800);
+  </script>
+</body>
+
+</html>

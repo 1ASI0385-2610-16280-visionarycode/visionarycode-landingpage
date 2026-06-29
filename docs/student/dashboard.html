@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel del Estudiante — VisionaryCode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="../assets/styles/main.css">
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, #005B60, #00363A);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 2.25rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .welcome-banner h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .welcome-banner p {
+      opacity: .85;
+      font-size: .95rem;
+      margin-top: .25rem;
+    }
+
+    .progress-section {
+      margin-top: 1rem;
+      max-width: 360px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .85rem;
+      margin-bottom: .4rem;
+    }
+
+    .module-list {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .module-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .module-status {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .85rem;
+      font-weight: 600;
+    }
+
+    .badge-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .badge-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .4rem;
+      padding: 1.25rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .badge-item.emoji {
+      font-size: 2rem;
+    }
+
+    .badge-item.name {
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .badge-item.locked {
+      opacity: .4;
+      filter: grayscale(1);
+    }
+
+    .section-heading {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 3rem 0 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .section-heading:first-of-type {
+      margin-top: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Saltar al panel principal</a>
+  <div id="aria-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+  <header class="navbar" role="banner">
+    <div class="container nav-container">
+      <a href="../index.html" class="logo"><img src="../assets/images/minilogo.jpg" alt="VisionaryCode" class="logo-img"> VisionaryCode</a>
+      <nav aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="dashboard.html" class="active" aria-current="page">Panel</a></li>
+          <li><a href="editor.html">Editor</a></li>
+          <li><a href="mentoring.html">Mentores</a></li>
+          <li><a href="progress.html">Progreso</a></li>
+          <li><a href="settings.html">Accesibilidad</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions" id="nav-user"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-main" tabindex="-1">
+
+    <!-- Welcome banner -->
+    <div class="welcome-banner" role="region" aria-label="Bienvenida y progreso">
+      <div>
+        <h2 id="welcome-heading">¡Hola, <span id="user-name">estudiante</span>!</h2>
+        <p>Continúa donde lo dejaste. Sigue aprendiendo sin límites.</p>
+        <div class="progress-section">
+          <div class="progress-label">
+            <span>Progreso del curso</span>
+            <span id="prog-pct" aria-live="polite">0%</span>
+          </div>
+          <div class="progress-bar-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="prog-bar-wrap" style="background:rgba(255,255,255,.3)">
+            <div class="progress-bar" id="prog-bar" style="background:#fff;width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <a href="editor.html" class="btn btn-white">
+          <i class="fa-solid fa-code" aria-hidden="true"></i> Abrir editor
+        </a>
+        <a href="mentoring.html" class="btn btn-outline-white">
+          <i class="fa-solid fa-headset" aria-hidden="true"></i> Pedir mentor
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-grid" role="region" aria-label="Estadísticas rápidas">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div>
+        <div>
+          <div class="stat-value" id="stat-sessions">0</div>
+          <div class="stat-label">Tutorías recibidas</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+        <div>
+          <div class="stat-value" id="stat-badges">0</div>
+          <div class="stat-label">Insignias ganadas</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></div>
+        <div>
+          <div class="stat-value" id="stat-hours">0h</div>
+          <div class="stat-label">Horas de aprendizaje</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Módulos del curso -->
+    <h2 class="section-heading">Módulos del curso</h2>
+    <div class="module-list" role="list" aria-label="Lista de módulos">
+      <div class="module-item" role="listitem">
+        <div><strong>Módulo 1: Fundamentos de Python</strong>
+          <div style="font-size:.82rem;color:var(--text-muted)">Variables, tipos, condicionales</div>
+        </div>
+        <div class="module-status"><i class="fa-solid fa-circle-check" style="color:var(--success)" aria-hidden="true"></i> Completado</div>
+      </div>
+      <div class="module-item" role="listitem">
+        <div><strong>Módulo 2: Estructuras de datos</strong>
+          <div style="font-size:.82rem;color:var(--text-muted)">Listas, diccionarios, conjuntos</div>
+        </div>
+        <div class="module-status"><i class="fa-solid fa-circle-check" style="color:var(--success)" aria-hidden="true"></i> Completado</div>
+      </div>
+      <div class="module-item" role="listitem">
+        <div><strong>Módulo 3: Funciones y recursión</strong>
+          <div style="font-size:.82rem;color:var(--text-muted)">Definición, parámetros, recursividad</div>
+        </div>
+        <div class="module-status"><i class="fa-solid fa-spinner fa-spin" style="color:var(--primary)" aria-hidden="true"></i> <span aria-live="polite">En progreso</span></div>
+      </div>
+      <div class="module-item" role="listitem" style="opacity:.6">
+        <div><strong>Módulo 4: Programación orientada a objetos</strong>
+          <div style="font-size:.82rem;color:var(--text-muted)">Clases, herencia, polimorfismo</div>
+        </div>
+        <div class="module-status"><i class="fa-solid fa-lock" aria-hidden="true"></i> Bloqueado</div>
+      </div>
+      <div class="module-item" role="listitem" style="opacity:.6">
+        <div><strong>Módulo 5: Proyecto final</strong>
+          <div style="font-size:.82rem;color:var(--text-muted)">Aplicación completa accesible</div>
+        </div>
+        <div class="module-status"><i class="fa-solid fa-lock" aria-hidden="true"></i> Bloqueado</div>
+      </div>
+    </div>
+
+    <!-- Insignias -->
+    <h2 class="section-heading">Mis insignias</h2>
+    <div class="badge-grid" id="badge-grid" role="list" aria-label="Insignias obtenidas"></div>
+
+    <!-- Historial reciente -->
+    <h2 class="section-heading">Tutorías recientes</h2>
+    <div id="recent-history">
+      <p style="color:var(--text-muted);font-size:.9rem">Cargando historial...</p>
+    </div>
+
+  </main>
+
+  <script src="../assets/scripts/app.js"></script>
+  <script>
+    const user = Auth.requireStudent();
+    if (user) {
+      document.getElementById('user-name').textContent = user.name.split(' ')[0];
+      document.getElementById('prog-pct').textContent = (user.progress || 0) + '%';
+      document.getElementById('prog-bar').style.width = (user.progress || 0) + '%';
+      document.getElementById('prog-bar-wrap').setAttribute('aria-valuenow', user.progress || 0);
+      document.getElementById('stat-badges').textContent = (user.badges || []).length;
+
+      // History for stat
+      const hist = DB.get('history') || [];
+      const myHist = hist.filter(h => h.studentId === user.id);
+      document.getElementById('stat-sessions').textContent = myHist.length;
+      const totalHours = myHist.reduce((a, h) => a + (h.duration || 0), 0);
+      document.getElementById('stat-hours').textContent = Math.round(totalHours / 60) + 'h';
+
+      // Badges
+      const BADGES = Progress.BADGES;
+      const earned = user.badges || [];
+      const grid = document.getElementById('badge-grid');
+      grid.innerHTML = Object.entries(BADGES).map(([id, b]) => `
+ <div class="badge-item ${earned.includes(id) ? '' : 'locked'}" role="listitem"
+ aria-label="${b.name}: ${b.desc}. ${earned.includes(id) ? 'Obtenida' : 'Pendiente'}">
+ <span class="emoji" aria-hidden="true">${b.icon}</span>
+ <span class="name">${b.name}</span>
+ <span style="font-size:.72rem;color:var(--text-muted)">${earned.includes(id) ? '✓ Ganada' : 'Pendiente'}</span>
+ </div>
+ `).join('');
+
+      // Recent history
+      const histEl = document.getElementById('recent-history');
+      if (myHist.length === 0) {
+        histEl.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem">Aún no tienes tutorías. <a href="mentoring.html" style="color:var(--primary);font-weight:600">Solicita tu primera</a></p>';
+      } else {
+        histEl.innerHTML = `<div style="overflow-x:auto"><table aria-label="Historial de tutorías recientes">
+ <thead><tr><th>Mentor</th><th>Tema</th><th>Fecha</th><th>Duración</th><th>Calificación</th></tr></thead>
+ <tbody>${myHist.slice(-3).reverse().map(h => `<tr>
+ <td>${h.mentorName}</td>
+ <td>${h.topic}</td>
+ <td>${h.date}</td>
+ <td>${h.duration} min</td>
+ <td>${h.rating ? '★'.repeat(h.rating) : 'Sin calificar'}</td>
+ </tr>`).join('')}</tbody>
+ </table></div>`;
+      }
+
+      // Welcome TTS
+      TTS.speak('Panel del estudiante. Hola ' + user.name.split(' ')[0] + '. Tu progreso es del ' + (user.progress || 0) + ' por ciento. Usa Tab para navegar entre las secciones.');
+    }
+  </script>
+</body>
+
+</html>
